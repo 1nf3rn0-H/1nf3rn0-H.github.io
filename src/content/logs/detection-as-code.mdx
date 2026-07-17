@@ -1,0 +1,38 @@
+---
+title: "Engineering Better Detections with Detection-as-Code"
+description: "Treating detection content as software: validated, reviewed, deployed deliberately, and observed after release."
+publishedAt: 2025-06-29
+updatedAt: 2025-06-29
+status: published
+type: article
+category: detection-engineering
+tags: [detection-as-code, reliability, splunk, automation]
+difficulty: intermediate
+featured: true
+tools: [Python, GitHub Actions, SPL]
+mitre: [T1059, T1105]
+---
+
+## The detection is not the unit of work
+
+A detection rule is a small part of a much larger system. It depends on event quality, parsing assumptions, enrichment, alert routing, and the analyst context that turns a match into a decision.
+
+Treating this system as code makes its assumptions inspectable. It also makes change safer: reviews can catch query regressions, tests can protect expected behaviour, and deployments can be traced to a specific revision.
+
+## A practical pipeline
+
+Start with a small, explicit contract for each detection:
+
+```yaml
+id: suspicious-process-chain
+owner: detection-engineering
+telemetry:
+  - endpoint.process
+expected_false_positive_rate: low
+```
+
+The pipeline should validate schema, syntax, and references before deployment. After release, observe volume, latency, and the ratio of actionable outcomes. A rule that compiles but produces unusable alerts has not succeeded.
+
+## Reliability is an operational property
+
+Detection-as-code is most useful when it extends beyond version control. A reliable programme treats signal loss, parser changes, and deployment failures as observable conditions—not surprises discovered during an incident.

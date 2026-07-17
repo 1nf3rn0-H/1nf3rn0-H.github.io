@@ -1,0 +1,8 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+export async function getStaticPaths(){const logs=await getCollection('logs',({data})=>data.status==='published');return logs.map((log)=>({params:{slug:log.id},props:{log}}));}
+const { log } = Astro.props; const { Content, headings } = await render(log); const data = log.data;
+const fields=[['PUBLISHED',data.publishedAt.toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'2-digit'}).toUpperCase()],['TYPE',data.type],['CATEGORY',data.category],['DIFFICULTY',data.difficulty],['TOOLS',data.tools?.join(' · ')],['MITRE',data.mitre?.join(' · ')]] as const;
+---
+<BaseLayout path={`/logs/${log.id}/`} title={`${data.title} — Telemetry Lab`} description={data.description}><div class="article-shell"><article class="article"><p class="article-kicker">LOG · {data.type.toUpperCase()} · {data.category.toUpperCase()}</p><h1>{data.title}</h1><p class="article-summary">{data.description}</p><div class="article-meta">{fields.filter(([,value])=>value).map(([label,value])=><div>{label}<strong>{String(value).toUpperCase()}</strong></div>)}</div><div class="prose"><Content /></div></article>{headings.length>0&&<aside class="article-aside" aria-label="Table of contents"><p>ON THIS PAGE</p>{headings.filter((heading)=>heading.depth===2||heading.depth===3).map((heading)=><a href={`#${heading.slug}`}>{heading.text}</a>)}</aside>}</div></BaseLayout>
