@@ -28,8 +28,9 @@ jobs:
       - run: npm run check
       - run: npm run build
         env:
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-          BASE_URL: /${{ github.event.repository.name }}
+          # This is a user Pages repository (<owner>.github.io), which is served
+          # from the domain root rather than from /<repository-name>.
+          SITE_URL: https://${{ github.repository_owner }}.github.io
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
