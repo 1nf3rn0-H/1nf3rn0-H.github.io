@@ -8,6 +8,12 @@ export default defineConfig({
   output: 'static',
   integrations: [mdx(), sitemap()],
   markdown: {
-    shikiConfig: { theme: 'github-dark' },
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark-dimmed',
+      },
+      defaultColor: false,
+    },
   },
 });

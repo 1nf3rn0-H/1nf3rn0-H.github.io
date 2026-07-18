@@ -1,13 +1,162 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="Treating detection content as software: validated, reviewed, deployed deliberately, and observed after release."><link rel="canonical" href="https://1nf3rn0-h.github.io/logs/detection-as-code/"><link rel="alternate" type="application/rss+xml" title="Telemetry Lab research logs" href="/rss.xml"><meta property="og:title" content="Engineering Better Detections with Detection-as-Code — Telemetry Lab"><meta property="og:description" content="Treating detection content as software: validated, reviewed, deployed deliberately, and observed after release."><meta property="og:type" content="website"><meta name="twitter:card" content="summary"><title>Engineering Better Detections with Detection-as-Code — Telemetry Lab</title><link rel="stylesheet" href="/_astro/BaseLayout.BHqBSSU9.css"></head><body><div class="shell"><a class="skip-link" href="#content">Skip to content</a><header class="site-header"><a class="brand" href="/"><span class="brand-name">Telemetry Lab</span><span class="brand-owner">HARSH MEHTA</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/about/">ABOUT</a><a href="/" aria-current="page">LOGS</a><span class="nav-social"><a href="https://github.com/1nf3rn0-H" target="_blank" rel="noopener noreferrer">GITHUB ↗</a><a href="https://www.linkedin.com/in/1nf3rn0-h/" target="_blank" rel="noopener noreferrer">LINKEDIN ↗</a><a href="https://1nf3rn0-h.medium.com/" target="_blank" rel="noopener noreferrer">MEDIUM ↗</a><a href="/rss.xml">RSS</a></span></nav></header><main id="content"><div class="article-shell"><article class="article"><p class="article-kicker">LOG · ARTICLE · DETECTION-ENGINEERING</p><h1>Engineering Better Detections with Detection-as-Code</h1><p class="article-summary">Treating detection content as software: validated, reviewed, deployed deliberately, and observed after release.</p><div class="article-meta"><div>PUBLISHED<strong>29 JUN 2025</strong></div><div>TYPE<strong>ARTICLE</strong></div><div>CATEGORY<strong>DETECTION-ENGINEERING</strong></div><div>DIFFICULTY<strong>INTERMEDIATE</strong></div><div>TOOLS<strong>PYTHON · GITHUB ACTIONS · SPL</strong></div><div>MITRE<strong>T1059 · T1105</strong></div></div><div class="prose"><h2 id="the-detection-is-not-the-unit-of-work">The detection is not the unit of work</h2>
-<p>A detection rule is a small part of a much larger system. It depends on event quality, parsing assumptions, enrichment, alert routing, and the analyst context that turns a match into a decision.</p>
-<p>Treating this system as code makes its assumptions inspectable. It also makes change safer: reviews can catch query regressions, tests can protect expected behaviour, and deployments can be traced to a specific revision.</p>
-<h2 id="a-practical-pipeline">A practical pipeline</h2>
-<p>Start with a small, explicit contract for each detection:</p>
-<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">id</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">suspicious-process-chain</span></span>
-<span class="line"><span style="color:#85E89D">owner</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">detection-engineering</span></span>
-<span class="line"><span style="color:#85E89D">telemetry</span><span style="color:#E1E4E8">:</span></span>
-<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#9ECBFF">endpoint.process</span></span>
-<span class="line"><span style="color:#85E89D">expected_false_positive_rate</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">low</span></span></code></pre>
-<p>The pipeline should validate schema, syntax, and references before deployment. After release, observe volume, latency, and the ratio of actionable outcomes. A rule that compiles but produces unusable alerts has not succeeded.</p>
-<h2 id="reliability-is-an-operational-property">Reliability is an operational property</h2>
-<p>Detection-as-code is most useful when it extends beyond version control. A reliable programme treats signal loss, parser changes, and deployment failures as observable conditions—not surprises discovered during an incident.</p></div></article><aside class="article-aside" aria-label="Table of contents"><p>ON THIS PAGE</p><a href="#the-detection-is-not-the-unit-of-work">The detection is not the unit of work</a><a href="#a-practical-pipeline">A practical pipeline</a><a href="#reliability-is-an-operational-property">Reliability is an operational property</a></aside></div></main><footer class="footer"><span>TELEMETRY LAB</span><span>STATIC SYSTEM · GITHUB PAGES</span><span>© 2026 HARSH MEHTA</span></footer></div></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="A practical approach to treating detections as software: explicit contracts, testable logic, controlled delivery, and feedback from production."><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://1nf3rn0-h.github.io/logs/detection-as-code/"><link rel="alternate" type="application/rss+xml" title="Telemetry Lab research logs" href="/rss.xml"><meta property="og:title" content="Detection-as-Code: Building Systems, Not Just Rules — Telemetry Lab"><meta property="og:description" content="A practical approach to treating detections as software: explicit contracts, testable logic, controlled delivery, and feedback from production."><meta property="og:type" content="website"><meta name="twitter:card" content="summary"><title>Detection-as-Code: Building Systems, Not Just Rules — Telemetry Lab</title><link rel="stylesheet" href="/_astro/BaseLayout.CXjBW0wz.css"></head><body><div class="shell"><a class="skip-link" href="#content">Skip to content</a><header class="site-header"><a class="brand" href="/"><span class="brand-name">Telemetry Lab</span><span class="brand-owner">HARSH MEHTA</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/about/">ABOUT</a><a href="/" aria-current="page">LOGS</a><span class="nav-social"><a href="https://github.com/1nf3rn0-H" target="_blank" rel="noopener noreferrer">GITHUB ↗</a><a href="https://www.linkedin.com/in/1nf3rn0-h/" target="_blank" rel="noopener noreferrer">LINKEDIN ↗</a><a href="https://1nf3rn0-h.medium.com/" target="_blank" rel="noopener noreferrer">MEDIUM ↗</a><a href="/rss.xml">RSS</a></span></nav></header><main id="content"><div class="article-shell"><article class="article"><p class="article-kicker">LOG · ARTICLE · DETECTION-ENGINEERING</p><h1>Detection-as-Code: Building Systems, Not Just Rules</h1><p class="article-summary">A practical approach to treating detections as software: explicit contracts, testable logic, controlled delivery, and feedback from production.</p><div class="article-meta"><div>PUBLISHED<strong>29 JUN 2025</strong></div><div>TYPE<strong>ARTICLE</strong></div><div>CATEGORY<strong>DETECTION-ENGINEERING</strong></div><div>DIFFICULTY<strong>INTERMEDIATE</strong></div><div>TOOLS<strong>GIT · GITHUB ACTIONS · PYTHON · SPLUNK · SPL</strong></div><div>MITRE<strong>T1059 · T1105</strong></div></div><div class="prose"><h2 id="a-detection-is-a-production-system">A detection is a production system</h2>
+<p>Most security teams do not struggle because they lack another rule. They struggle because a rule depends on a system that is rarely made explicit: telemetry must arrive, fields must retain their meaning, searches must finish on time, alerts must reach the right queue, and an analyst must have enough context to decide what to do next.</p>
+<p>That is why a detection that worked in a dashboard yesterday can still fail during an incident. A parser changes, a data source goes quiet, a macro is removed, or an otherwise sound search becomes too expensive to run at the intended cadence. The rule has not changed, but its operating environment has.</p>
+<p>Detection-as-Code (DaC) is the discipline of treating that whole lifecycle with the same care used for production software. Detection content lives in version control, changes are reviewed, assumptions are validated, releases are deliberate, and outcomes are observed after deployment. The goal is not a perfect framework or a particular SIEM. It is a repeatable way to make detection engineering more reliable.</p>
+<h2 id="start-with-a-contract-not-a-query">Start with a contract, not a query</h2>
+<p>SPL, KQL, or another query language is only one implementation detail. Before writing it, describe what the detection needs in order to be useful. A small, structured file makes those assumptions visible to reviewers and automation.</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="--shiki-light:#24292e;--shiki-dark:#adbac7;--shiki-light-bg:#fff;--shiki-dark-bg:#22272e;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">id</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">DET-ENDPOINT-041</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">name</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">PowerShell download cradle</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">owner</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">detection-engineering</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">status</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">enabled</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">schedule</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">&quot;*/15 * * * *&quot;</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">window</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">-20m</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">severity</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">high</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">telemetry</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">  - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">windows.process_creation</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">required_fields</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">  - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">Image</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">  - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">CommandLine</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">  - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">ParentImage</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">coverage</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">  mitre_attack</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">    - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">T1059.001</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">expected_outcome</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">true_positive_malicious_or_benign</span></span></code></pre>
+<p>The contract should answer questions that are expensive to reconstruct later:</p>
+<ul>
+<li>What behaviour is this intended to surface?</li>
+<li>Which telemetry and normalized fields does it rely on?</li>
+<li>Who owns tuning and response context?</li>
+<li>How often should it run, and what time range does it search?</li>
+<li>What does a useful result look like?</li>
+</ul>
+<p>The last question is particularly important. A rule that only produces unexplained false positives is not healthy; neither is a rule that never fires because its assumptions no longer match the data. Treating benign true positives as a valid outcome creates room for assurance detections, coverage checks, and controlled tests alongside conventional malicious activity alerts.</p>
+<h2 id="separate-detection-content-from-platform-configuration">Separate detection content from platform configuration</h2>
+<p>Keep portable detection intent separate from the code that deploys it to a specific platform. This avoids turning every rule into a copy of vendor-specific REST parameters and makes platform changes easier to contain.</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="--shiki-light:#24292e;--shiki-dark:#adbac7;--shiki-light-bg:#fff;--shiki-dark-bg:#22272e;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>detections/</span></span>
+<span class="line"><span>  endpoint/</span></span>
+<span class="line"><span>    powershell-download-cradle.yaml</span></span>
+<span class="line"><span>tests/</span></span>
+<span class="line"><span>  endpoint/</span></span>
+<span class="line"><span>    powershell-download-cradle.test.yaml</span></span>
+<span class="line"><span>schemas/</span></span>
+<span class="line"><span>  detection.schema.json</span></span>
+<span class="line"><span>scripts/</span></span>
+<span class="line"><span>  validate_schema.py</span></span>
+<span class="line"><span>  validate_query.py</span></span>
+<span class="line"><span>  deploy_splunk.py</span></span>
+<span class="line"><span>.github/workflows/</span></span>
+<span class="line"><span>  detection-ci.yml</span></span></code></pre>
+<p>For a Splunk-backed repository, the detection file can hold the metadata and search while a deployment adapter translates it into a saved search. That adapter becomes the right place to set defaults, add deployment labels, or map common fields—not every individual rule.</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="--shiki-light:#24292e;--shiki-dark:#adbac7;--shiki-light-bg:#fff;--shiki-dark-bg:#22272e;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">name</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">Suspicious PowerShell File Download</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">search</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#D73A49;--shiki-dark:#F47067">&gt;</span></span>
+<span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">  index=windows EventCode IN (4688, 4104)</span></span>
+<span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">  | search Image IN (&quot;*\\powershell.exe&quot;, &quot;*\\pwsh.exe&quot;)</span></span>
+<span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">  | search CommandLine IN (&quot;*Invoke-WebRequest*&quot;, &quot;*DownloadFile*&quot;, &quot;*Start-BitsTransfer*&quot;)</span></span>
+<span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">  | stats values(CommandLine) as command_line values(ParentImage) as parent_image by host, user, Image</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">cron</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">&quot;*/15 * * * *&quot;</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">earliest_time</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">-20m</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">latest_time</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">now</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">alert.severity</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#6CB6FF">4</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">risk_score</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#6CB6FF">70</span></span></code></pre>
+<p>The query is deliberately not the entire detection. The schedule, lookback, dependencies, severity, ownership, references, and tests are all part of the deployable asset.</p>
+<h2 id="test-the-assumptions-in-layers">Test the assumptions in layers</h2>
+<p>“The query parses” is a useful check, but it is not evidence that the detection works. Effective DaC pipelines validate progressively, starting with inexpensive checks and ending with evidence from realistic telemetry.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Question it answers</th>
+<th>Example failure caught</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema</td>
+<td>Is the detection complete and consistently shaped?</td>
+<td>Missing owner, invalid severity, malformed schedule</td>
+</tr>
+<tr>
+<td>Static query validation</td>
+<td>Can the platform understand the query?</td>
+<td>Broken SPL, unresolved macro, invalid field reference</td>
+</tr>
+<tr>
+<td>Data contract</td>
+<td>Are the required fields present and populated?</td>
+<td><code>CommandLine</code> was dropped during normalization</td>
+</tr>
+<tr>
+<td>Behavioural test</td>
+<td>Does known-good test data produce the expected result?</td>
+<td>A renamed event ID silently prevents a match</td>
+</tr>
+<tr>
+<td>Performance check</td>
+<td>Can it run at its planned cadence and scope?</td>
+<td>An unbounded join backs up the search queue</td>
+</tr>
+<tr>
+<td>Deployment check</td>
+<td>Did the exact reviewed revision reach the target?</td>
+<td>A rule deploys disabled or with a stale schedule</td>
+</tr>
+</tbody>
+</table>
+<p>The strongest tests come from controlled activity in a lab: execute the behaviour, collect the resulting telemetry, and confirm that the detection sees it. When that is not available, curated historical events and carefully constructed fixtures are still valuable. They catch regressions in field names, query logic, and expected result shape without asking production analysts to discover mistakes for you.</p>
+<p>Here is the shape of a simple behavioural fixture:</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="--shiki-light:#24292e;--shiki-dark:#adbac7;--shiki-light-bg:#fff;--shiki-dark-bg:#22272e;overflow-x:auto" tabindex="0" data-language="yaml"><code><span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">rule</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">DET-ENDPOINT-041</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">events</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">fixtures/powershell-download.jsonl</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">expect</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">  minimum_results</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#6CB6FF">1</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">  fields</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">    - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">host</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">    - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">user</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">    - </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">command_line</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">  contains</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">:</span></span>
+<span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#8DDB8C">    command_line</span><span style="--shiki-light:#24292E;--shiki-dark:#ADBAC7">: </span><span style="--shiki-light:#032F62;--shiki-dark:#96D0FF">Invoke-WebRequest</span></span></code></pre>
+<p>Use fixtures sparingly and keep their provenance clear. Synthetic data is excellent for testing logic, but it cannot prove that the required telemetry exists in every production segment. That is a separate, continuous control.</p>
+<h2 id="deliver-changes-as-an-engineering-workflow">Deliver changes as an engineering workflow</h2>
+<p>A practical pipeline does not need to begin with a large internal platform. A pull-request workflow is enough to establish the important controls:</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="--shiki-light:#24292e;--shiki-dark:#adbac7;--shiki-light-bg:#fff;--shiki-dark-bg:#22272e;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>Change detection content</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>schema + formatting checks</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>query, field, and fixture tests</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>peer review and approval</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>deploy to staging</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>release to production with revision metadata</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>observe volume, latency, and analyst outcomes</span></span></code></pre>
+<p>GitHub Actions, GitLab CI, Jenkins, or a similar runner can execute the mechanics. The design matters more than the product: validate only the changed detections where possible, protect deployment credentials in the CI secret store, and make production deployment a distinct, auditable action.</p>
+<p>Avoid running sensitive deployment jobs on untrusted pull-request code. In particular, self-hosted runners should be isolated and used only with workflows where repository and contributor trust are carefully controlled. The deployment identity should have only the permissions needed to manage detection content—not broad administrative access to the SIEM.</p>
+<h2 id="treat-production-feedback-as-a-test-result">Treat production feedback as a test result</h2>
+<p>Deploying a detection is the start of its operational life, not the end of the work. Monitor the signals that reveal whether its assumptions remain true:</p>
+<ul>
+<li>alert volume and distribution by source, host, and business unit;</li>
+<li>query runtime, skipped runs, and scheduler delay;</li>
+<li>ingestion or parser health for required sources and fields;</li>
+<li>analyst dispositions, escalation rate, and time-to-triage;</li>
+<li>coverage gaps where expected tests ran but no supporting telemetry arrived.</li>
+</ul>
+<p>These measures turn tuning from subjective debate into an evidence-driven decision. A sudden reduction in volume may be a welcome improvement, a broken parser, or a logging policy change. Without a baseline and ownership, those outcomes are indistinguishable.</p>
+<p>The same feedback should feed the repository. Capture an explanation when a threshold changes, preserve a regression fixture when an incident teaches something new, and deprecate rules whose telemetry is no longer available or whose value is consistently low. Version control gives a history of edits; an operational feedback loop gives those edits meaning.</p>
+<h2 id="build-for-your-environment">Build for your environment</h2>
+<p>There is no universal DaC maturity model. A small team may begin with YAML files, pull-request review, and a schema validator. A larger programme might add a staging SIEM, adversary-emulation tests, detection health dashboards, and automated change promotion. Both are valid if the practices reduce uncertainty around detection changes.</p>
+<p>The useful progression is simple:</p>
+<ol>
+<li>Make detection assumptions explicit.</li>
+<li>Store and review changes as code.</li>
+<li>Test against data, not just syntax.</li>
+<li>Release predictably and retain traceability.</li>
+<li>Measure what happens after deployment.</li>
+</ol>
+<p>Reliable detection engineering is not about writing flawless queries. It is about building a system in which detections can be understood, challenged, improved, and recovered when the environment changes.</p></div></article><aside class="article-aside" aria-label="Table of contents"><p>ON THIS PAGE</p><a href="#a-detection-is-a-production-system">A detection is a production system</a><a href="#start-with-a-contract-not-a-query">Start with a contract, not a query</a><a href="#separate-detection-content-from-platform-configuration">Separate detection content from platform configuration</a><a href="#test-the-assumptions-in-layers">Test the assumptions in layers</a><a href="#deliver-changes-as-an-engineering-workflow">Deliver changes as an engineering workflow</a><a href="#treat-production-feedback-as-a-test-result">Treat production feedback as a test result</a><a href="#build-for-your-environment">Build for your environment</a></aside></div></main><footer class="footer"><span>TELEMETRY LAB</span><span>STATIC SYSTEM · GITHUB PAGES</span><span>© 2026 HARSH MEHTA</span></footer></div></body></html>
