@@ -1,8 +1,50 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-const logs = (await getCollection('logs', ({ data }) => data.status === 'published')).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
-const types = ['all', 'article', 'research-note', 'experiment', 'architecture', 'field-note'];
+import edition from '../data/current-edition.json';
+
+const logs = (await getCollection('logs', ({ data }) => data.status === 'published'))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+const lead = logs[0];
+const recent = logs.filter((log) => log.id !== lead?.id).slice(0, 4);
 const base = import.meta.env.BASE_URL;
+const editionDate = new Date(`${edition.meta.date}T00:00:00Z`);
+const dateLabel = editionDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
-<BaseLayout path="/" title="Telemetry Lab — Research Logs"><section class="hero"><p class="eyebrow">Harsh Mehta · Security engineering research</p><h2>Reliable signals for<br/><em>modern security.</em></h2><p class="lede">Notes and experiments on detection engineering, telemetry visibility, threat hunting, purple teaming, offensive research, and security automation.</p><div class="actions"><a class="button primary" href="#logs">EXPLORE LOGS ↓</a><a class="button" href={`${base}about/`}>ABOUT HARSH →</a></div><div class="flow" aria-hidden="true"><div class="flow-grid"></div><div class="flow-line"></div><i class="flow-dot"></i><i class="flow-dot"></i><i class="flow-dot"></i><i class="flow-dot"></i><i class="flow-dot"></i><div class="flow-labels"><span>SOURCE</span><span>COLLECT</span><span>NORMALIZE</span><span>DETECT</span><span>ANALYZE</span></div></div></section><section class="section" id="logs"><div class="section-heading"><div><p class="eyebrow">Indexed collection</p><h2>Research Logs</h2></div><p>Articles, experiments, architectures, implementation notes, and observations from security engineering work.</p></div><div class="filters" aria-label="Filter research logs">{types.map((type,index) => <button class="filter" type="button" data-filter={type} aria-pressed={index === 0 ? 'true' : 'false'}>{type.replace('-', ' ').toUpperCase()}</button>)}</div><div class="log-list">{logs.map((log,index) => <a class="log-row" href={`${base}logs/${log.id}/`} data-type={log.data.type}><time class="log-date" datetime={log.data.publishedAt.toISOString()}>{log.data.publishedAt.toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'2-digit'}).toUpperCase()}</time><div><p class="log-id">LOG-{String(index+1).padStart(4,'0')} · {log.data.status.toUpperCase()}</p><h2>{log.data.title}</h2><p>{log.data.description}</p><div class="log-meta"><span>{log.data.type.toUpperCase()}</span><span>·</span><span>{log.data.category.toUpperCase()}</span>{log.data.tags.map((tag) => <span class="tag">#{tag}</span>)}</div></div><span class="log-arrow" aria-hidden="true">↗</span></a>)}</div><p class="empty-state" hidden>No logs matched the selected telemetry filters.</p></section><script>const filters = document.querySelectorAll<HTMLButtonElement>('.filter'); const rows = document.querySelectorAll<HTMLElement>('.log-row'); const empty = document.querySelector<HTMLElement>('.empty-state'); filters.forEach((filter) => filter.addEventListener('click', () => { const value = filter.dataset.filter; filters.forEach((button) => button.setAttribute('aria-pressed',String(button===filter))); let visible=0; rows.forEach((row) => { const matches=value==='all'||row.dataset.type===value; row.hidden=!matches;if(matches)visible++; });if(empty)empty.hidden=visible>0; }));</script></BaseLayout>
+<BaseLayout path="/" title="Telemetry Lab — Security Research & Field Notes">
+  <section class="journal-lead">
+    <div class="lead-log">
+      <p class="eyebrow">Lead research log</p>
+      {lead && <>
+        <p class="lead-log-id">{lead.data.type.toUpperCase()} · {lead.data.category.replaceAll('-', ' ').toUpperCase()}</p>
+        <h1>{lead.data.title}</h1>
+        <p class="lede">{lead.data.description}</p>
+        <div class="lead-log-meta"><time datetime={lead.data.publishedAt.toISOString()}>{lead.data.publishedAt.toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'2-digit'}).toUpperCase()}</time><span>{lead.data.difficulty?.toUpperCase()}</span><span>{lead.data.tools?.slice(0,3).join(' · ').toUpperCase()}</span></div>
+        <a class="text-link" href={`${base}logs/${lead.id}/`}>READ THE INVESTIGATION <span aria-hidden="true">→</span></a>
+      </>}
+    </div>
+    <aside class="edition-preview" aria-labelledby="today-edition">
+      <div class="edition-preview-top"><span>THE DAILY EDITION</span><time datetime={edition.meta.date}>{dateLabel.toUpperCase()}</time></div>
+      <p class="edition-mark">FIELD NOTES</p>
+      <h2 id="today-edition">{edition.title}</h2>
+      <p>{edition.standfirst}</p>
+      <ol>{edition.synthesis.principles.slice(0,3).map((principle) => <li>{principle}</li>)}</ol>
+      <a href={`${base}field-notes/`}>READ TODAY'S {edition.readTime.toUpperCase()} EDITION <span aria-hidden="true">→</span></a>
+    </aside>
+  </section>
+
+  <div class="signal-strip" aria-label="Telemetry workflow"><b>SIGNAL PATH</b><span>SOURCE</span><i>→</i><span>COLLECT</span><i>→</i><span>NORMALIZE</span><i>→</i><span>DETECT</span><i>→</i><span>ANALYZE</span></div>
+
+  <section class="recent-journal" id="logs">
+    <div class="section-heading ruled-heading"><div><p class="eyebrow">Indexed collection</p><h2>Recent research</h2></div><p>Investigations, implementation notes and observations from detection engineering work.</p></div>
+    <div class="journal-index">
+      {recent.map((log,index) => <a class="journal-row" href={`${base}logs/${log.id}/`}>
+        <span class="journal-number">{String(index+1).padStart(2,'0')}</span>
+        <div><p>{log.data.type.toUpperCase()} · {log.data.category.replaceAll('-', ' ').toUpperCase()}</p><h3>{log.data.title}</h3><span>{log.data.description}</span></div>
+        <time datetime={log.data.publishedAt.toISOString()}>{log.data.publishedAt.toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'2-digit'}).toUpperCase()}</time>
+        <b aria-hidden="true">↗</b>
+      </a>)}
+    </div>
+    <a class="index-link" href={`${base}logs/`}>VIEW THE COMPLETE RESEARCH INDEX →</a>
+  </section>
+</BaseLayout>

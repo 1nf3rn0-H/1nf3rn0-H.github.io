@@ -1,0 +1,55 @@
+---
+import FieldNotesLayout from '../../layouts/FieldNotesLayout.astro';
+import { fieldNotesIndex } from '../../lib/field-notes';
+
+const base = import.meta.env.BASE_URL;
+---
+<FieldNotesLayout path="/field-notes/archive/" title="The Field Notes Archive" description="Search every Field Notes technical edition by concept, book, research field or implementation topic.">
+  <div class="top-rule"><span>EST. MMXXVI</span><span>THE READING ROOM</span><span>{fieldNotesIndex.length} {fieldNotesIndex.length === 1 ? 'EDITION' : 'EDITIONS'} ON FILE</span></div>
+  <header class="masthead shell">
+    <div class="date-stamp">Complete index<small>Search · recover · revisit</small></div>
+    <div class="nameplate"><span>The</span><h1>Field Notes</h1><p>Archive & reading room</p></div>
+    <div class="volume">VOL. I · ARCHIVE<small>Every published edition</small></div>
+  </header>
+  <div class="double-rule shell"></div>
+  <nav class="edition-tools shell hosted-edition-tools" aria-label="Archive navigation">
+    <a href={base}>← Telemetry Lab</a>
+    <div class="topic-picker"><label>Reading desk</label><strong>Complete Field Notes index</strong></div>
+    <a href={`${base}field-notes/`}>Latest edition →</a>
+  </nav>
+    <section class="archive-desk archive-page shell" aria-labelledby="archive-title">
+      <div class="archive-heading"><p>THE ARCHIVE DESK · COMPLETE INDEX</p><h2 id="archive-title">Find an idea you missed</h2><span>Search across topics, cited books, research fields, technical modules and practice labs. Every result opens the original dated edition.</span></div>
+      <label class="archive-search"><span>SEARCH THE EDITIONS</span><div><input type="search" id="edition-search" placeholder="Try: telemetry, cognition, Windows internals…" autocomplete="off" autofocus/><kbd>⌘ K</kbd></div></label>
+      <p class="archive-status" id="archive-status" aria-live="polite">Showing every published edition.</p>
+      <div class="archive-results" id="archive-results">
+        {fieldNotesIndex.map((entry,index) => <a class="archive-result" href={`${base}field-notes/${entry.date}/`} data-search={entry.searchText}>
+          <span class="archive-index">{String(index+1).padStart(2,'0')}</span>
+          <div><time datetime={entry.date}>{new Date(`${entry.date}T00:00:00Z`).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).toUpperCase()}</time><h3>{entry.title}</h3><p>{entry.standfirst}</p><small>{entry.topics.slice(0,4).join(' · ').toUpperCase()}</small></div>
+          <strong>{entry.readTime.toUpperCase()} →</strong>
+        </a>)}
+      </div>
+      <p class="archive-empty" id="archive-empty" hidden>No edition matched that search. Try a broader system, book or concept.</p>
+    </section>
+    <footer class="footer shell"><span>One permanent page per daily edition</span><span>Static archive · no external search service</span><span>Search runs entirely in this page</span></footer>
+  <script>
+    const input = document.querySelector<HTMLInputElement>('#edition-search');
+    const results = Array.from(document.querySelectorAll<HTMLElement>('.archive-result'));
+    const status = document.querySelector<HTMLElement>('#archive-status');
+    const empty = document.querySelector<HTMLElement>('#archive-empty');
+    const filterEditions = () => {
+      const terms = (input?.value ?? '').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      let visible = 0;
+      results.forEach((result) => {
+        const matches = terms.every((term) => (result.dataset.search ?? '').includes(term));
+        result.hidden = !matches;
+        if (matches) visible += 1;
+      });
+      if (status) status.textContent = terms.length ? `${visible} ${visible === 1 ? 'edition' : 'editions'} found.` : 'Showing every published edition.';
+      if (empty) empty.hidden = visible !== 0;
+    };
+    input?.addEventListener('input', filterEditions);
+    document.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === 'k') { event.preventDefault(); input?.focus(); }
+    });
+  </script>
+</FieldNotesLayout>

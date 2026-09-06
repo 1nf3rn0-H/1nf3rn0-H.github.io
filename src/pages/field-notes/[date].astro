@@ -1,0 +1,13 @@
+---
+import FieldNotesLayout from '../../layouts/FieldNotesLayout.astro';
+import FieldNotesEdition from '../../components/FieldNotesEdition.astro';
+import { fieldNotesEditions, type FieldNotesEdition as Edition } from '../../lib/field-notes';
+
+export function getStaticPaths() {
+  return fieldNotesEditions.map((edition) => ({ params: { date: edition.meta.date }, props: { edition } }));
+}
+const { edition } = Astro.props as { edition: Edition };
+---
+<FieldNotesLayout path={`/field-notes/${edition.meta.date}/`} title={`${edition.title} — Field Notes`} description={edition.standfirst}>
+  <FieldNotesEdition edition={edition}/>
+</FieldNotesLayout>

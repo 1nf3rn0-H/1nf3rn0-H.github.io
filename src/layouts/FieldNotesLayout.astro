@@ -1,0 +1,13 @@
+---
+import '../styles/field-notes-reference.css';
+import '../styles/field-notes-hosted.css';
+import { siteConfig } from '../config/site';
+
+interface Props { title: string; description: string; path: string }
+const { title, description, path } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const siteUrl = String(Astro.site ?? siteConfig.url);
+const canonical = new URL(path.replace(/^\//, ''), `${siteUrl}${siteUrl.endsWith('/') ? '' : '/'}`);
+const socialImage = new URL('field-notes-card.jpg', `${siteUrl}${siteUrl.endsWith('/') ? '' : '/'}`);
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/><link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`}/><link rel="canonical" href={canonical}/><meta property="og:title" content={title}/><meta property="og:description" content={description}/><meta property="og:type" content="article"/><meta property="og:image" content={socialImage}/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:image" content={socialImage}/><title>{title}</title></head><body><a class="skip-link" href="#content">Skip to content</a><main id="content"><slot /></main></body></html>

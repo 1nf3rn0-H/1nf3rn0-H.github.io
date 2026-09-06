@@ -1,0 +1,8 @@
+---
+import FieldNotesLayout from '../../layouts/FieldNotesLayout.astro';
+import FieldNotesEdition from '../../components/FieldNotesEdition.astro';
+import currentEdition from '../../data/current-edition.json';
+---
+<FieldNotesLayout path="/field-notes/" title={`${currentEdition.title} — Field Notes`} description={currentEdition.standfirst}>
+  <FieldNotesEdition edition={currentEdition}/>
+</FieldNotesLayout>

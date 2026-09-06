@@ -1,0 +1,172 @@
+/* The publication itself is copied from the local Field Notes stylesheet.
+   These rules only cover the static host navigation and archive. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 9px 12px;
+  background: #242018;
+  color: #eee6d4;
+  font-family: var(--font-utility), sans-serif;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus { transform: translateY(0); }
+.hosted-edition-tools > a {
+  font-family: var(--font-utility), sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.hosted-edition-tools > a:last-child { text-align: right; }
+.hosted-edition-tools > a:hover,
+.hosted-edition-tools > a:focus-visible { color: #712d26; text-decoration: underline; text-underline-offset: 4px; }
+.hosted-edition-tools .topic-picker strong {
+  min-width: 230px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 8px 11px;
+  border: 1px solid #5f574a;
+  font-family: var(--font-utility), sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+/* The local app reserves the first grid track for a citation icon. Static
+   editions omit that decorative icon, so the text occupies the full line. */
+.report ol li,
+.module-sources li,
+.correlation-stage ol li,
+.lab-close > aside li { grid-template-columns: 1fr; }
+
+.archive-page { padding-block: 46px 64px; }
+.archive-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+  column-gap: 48px;
+  align-items: end;
+  padding-bottom: 25px;
+  border-bottom: 5px double #242018;
+}
+.archive-heading p {
+  grid-column: 1 / -1;
+  margin: 0 0 9px;
+  color: #712d26;
+  font-family: var(--font-utility), sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .17em;
+}
+.archive-heading h2 {
+  margin: 0;
+  font-size: clamp(43px, 6vw, 76px);
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+.archive-heading > span {
+  padding-left: 22px;
+  border-left: 1px solid #817766;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.55;
+}
+.archive-search { display: block; margin: 31px 0 13px; }
+.archive-search > span {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-utility), sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  color: #712d26;
+}
+.archive-search > div { position: relative; }
+.archive-search input {
+  width: 100%;
+  min-height: 54px;
+  padding: 11px 72px 11px 15px;
+  border: 1px solid #5f574a;
+  border-radius: 0;
+  outline: 0;
+  background: rgb(238 230 212 / 55%);
+  color: #242018;
+  font: 16px/1.3 var(--font-editorial), Georgia, serif;
+}
+.archive-search input:focus { border-color: #712d26; box-shadow: inset 0 0 0 2px #712d26; }
+.archive-search kbd {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  padding: 4px 6px;
+  border: 1px solid #918675;
+  font: 8px/1 var(--font-utility), sans-serif;
+  letter-spacing: .05em;
+}
+.archive-status {
+  margin: 0 0 25px;
+  font-family: var(--font-utility), sans-serif;
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.archive-results { border-top: 3px solid #242018; }
+.archive-result {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: start;
+  padding: 24px 0;
+  border-bottom: 1px solid #817766;
+  color: inherit;
+  text-decoration: none;
+}
+.archive-result:hover h3,
+.archive-result:focus-visible h3 { color: #712d26; text-decoration: underline; text-underline-offset: 4px; }
+.archive-index {
+  font-family: var(--font-utility), sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #9b907e;
+}
+.archive-result time,
+.archive-result small,
+.archive-result > strong {
+  font-family: var(--font-utility), sans-serif;
+  font-size: 8px;
+  letter-spacing: .1em;
+}
+.archive-result time { color: #712d26; font-weight: 700; }
+.archive-result h3 { margin: 7px 0 8px; font-size: clamp(26px, 3vw, 39px); line-height: 1; letter-spacing: -.025em; }
+.archive-result p { max-width: 780px; margin: 0 0 10px; font-size: 13px; line-height: 1.5; }
+.archive-result small { color: #655e52; line-height: 1.45; }
+.archive-result > strong { padding-top: 3px; white-space: nowrap; }
+.archive-empty {
+  margin: 0;
+  padding: 38px 0;
+  border-bottom: 3px solid #242018;
+  font-size: 18px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  .hosted-edition-tools > a { display: block; padding: 6px 0; }
+  .hosted-edition-tools > a:last-child { text-align: left; }
+  .hosted-edition-tools .topic-picker { margin: 7px 0; }
+  .hosted-edition-tools .topic-picker strong { min-width: 0; flex: 1; }
+  .archive-page { padding-block: 34px 48px; }
+  .archive-heading { display: block; }
+  .archive-heading > span { display: block; margin-top: 20px; padding: 14px 0 0; border-top: 1px solid #817766; border-left: 0; }
+  .archive-result { grid-template-columns: 38px minmax(0, 1fr); gap: 12px; }
+  .archive-result > strong { grid-column: 2; padding-top: 0; }
+}

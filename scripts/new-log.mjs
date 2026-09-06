@@ -18,7 +18,7 @@ const mitre = await ask.question('MITRE techniques (comma-separated, optional): 
 ask.close();
 const slug = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 if (!title || !description || !slug) throw new Error('A title and description are required.');
-const file = `src/content/logs/${slug}.mdx`;
+const file = `src/content/logs/${slug}.md`;
 try { await access(file, constants.F_OK); throw new Error(`${file} already exists.`); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 const list = (value) => value ? `[${value.split(',').map((item) => item.trim()).filter(Boolean).join(', ')}]` : '[]';
 const today = new Date().toISOString().slice(0, 10);

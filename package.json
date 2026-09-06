@@ -9,20 +9,26 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build && pagefind --site dist",
+    "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "sync:field-notes": "node scripts/sync-field-notes.mjs",
+    "sync:field-notes-style": "node scripts/sync-field-notes-style.mjs",
     "new:log": "node scripts/new-log.mjs"
   },
   "dependencies": {
-    "@astrojs/mdx": "latest",
-    "@astrojs/rss": "latest",
-    "@astrojs/sitemap": "latest",
-    "astro": "latest",
-    "pagefind": "latest"
+    "@astrojs/rss": "4.0.19",
+    "@astrojs/sitemap": "3.7.3",
+    "astro": "7.1.1"
   },
   "devDependencies": {
-    "@astrojs/check": "latest",
-    "typescript": "latest"
+    "@astrojs/check": "0.9.9",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "fast-uri": "3.1.7",
+    "js-yaml": "4.3.2",
+    "nanoid": "3.3.18",
+    "postcss": "8.5.28"
   }
 }

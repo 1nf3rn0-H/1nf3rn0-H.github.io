@@ -2,7 +2,7 @@ import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
 const logs = defineCollection({
-  loader: glob({ base: './src/content/logs', pattern: '**/*.{md,mdx}' }),
+  loader: glob({ base: './src/content/logs', pattern: '**/*.md' }),
   schema: z.object({
     title: z.string().min(10).max(120), description: z.string().min(20).max(220), publishedAt: z.coerce.date(), updatedAt: z.coerce.date().optional(),
     status: z.enum(['draft', 'published']), type: z.enum(['article', 'research-note', 'experiment', 'architecture', 'field-note']),

@@ -1,0 +1,81 @@
+---
+import type { FieldNotesEdition } from '../lib/field-notes';
+
+interface Props { edition: FieldNotesEdition }
+const { edition } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const editionDate = new Date(`${edition.meta.date}T00:00:00Z`);
+const displayDate = editionDate.toLocaleDateString('en-IN', { weekday:'long', day:'2-digit', month:'long', year:'numeric', timeZone:'UTC' });
+const allSources = [
+  ...edition.reports.flatMap((report) => report.sources),
+  ...edition.technical.modules.flatMap((module) => module.sources),
+  ...edition.correlation.stages.map((stage) => stage.source),
+  ...edition.lab.sources,
+];
+const citedBooks = new Set(allSources.map((source) => source.book)).size;
+const roman = ['I','II','III','IV'];
+---
+<div class="top-rule"><span>EST. MMXXVI</span><span>A PRIVATE DAILY READER</span><span>PRICE: CURIOSITY</span></div>
+<header class="masthead shell">
+  <div class="date-stamp">{displayDate}<small>New Delhi Edition</small></div>
+  <div class="nameplate"><span>The</span><h1>Field Notes</h1><p>Intelligence gathered from the shelves</p></div>
+  <div class="volume">VOL. I · NO. {String(Math.abs(Math.floor(editionDate.getTime()/86400000)) % 1000).padStart(3,'0')}<small>Codex daily edition</small></div>
+</header>
+<div class="double-rule shell"></div>
+
+<nav class="edition-tools shell hosted-edition-tools" aria-label="Edition navigation">
+  <a href={base}>← Telemetry Lab</a>
+  <div class="topic-picker"><label>Today’s subject</label><strong>{edition.desk}</strong></div>
+  <a href={`${base}field-notes/archive/`}>Archive & search →</a>
+</nav>
+<div class="generation-wire shell state-ready"><b>PUBLISHED DESK</b><span>{edition.topic}</span><small>{edition.readTime} read · revision {edition.meta.revision}</small></div>
+<div class="interest-wire shell"><b>READER’S WIRE</b><span>Complex systems</span><span>Detection engineering</span><span>Windows + Linux internals</span><span>Behavioural psychology</span><span>CBT</span><span>Neuropsychology</span><span>Human mind</span></div>
+
+<section class="lead shell">
+  <article class="lead-story">
+    <div class="eyebrow"><span>{edition.desk}</span><span>{edition.readTime} edition</span></div>
+    <h2>{edition.title}</h2>
+    <p class="standfirst">{edition.standfirst}</p>
+    <div class="byline">AN ANALYSIS ACROSS {citedBooks} RELEVANT VOLUMES</div>
+    <div class="thesis">{edition.thesis.map((paragraph) => <p>{paragraph}</p>)}</div>
+  </article>
+  <aside class="ledger">
+    <div class="ledger-head"><span>▣</span><span>THE EVIDENCE LEDGER</span></div>
+    <strong>{String(citedBooks).padStart(2,'0')}</strong><p>relevant books cited in this edition</p>
+    <dl><div><dt>{allSources.length}</dt><dd>page-level references</dd></div><div><dt>{edition.technical.modules.length}</dt><dd>technical modules</dd></div><div><dt>{String(edition.lab.phases.length).padStart(2,'0')}</dt><dd>capstone practice phases</dd></div></dl>
+    <small>Only relevant books are cited. A forced reference is weaker than an honest omission.</small>
+  </aside>
+</section>
+
+<div class="section-rule shell"><span>REPORTS & CORRESPONDENCE</span></div>
+<section class="reports shell">{edition.reports.map((report,index) => <article class={`report report-${index+1}`}><div class="roman">{roman[index]}</div><h3>{report.title}</h3><p>{report.body}</p><ol>{report.sources.map((source) => <li><span><b>{source.book} · PAGE {source.page}</b><small>{source.note}</small></span></li>)}</ol></article>)}</section>
+
+<section class="technical-desk"><div class="shell">
+  <header class="technical-head"><div><span>THE TECHNICAL DESK</span><h3>{edition.technical.title}</h3></div><p>{edition.technical.intro}</p></header>
+  <div class="technical-modules">{edition.technical.modules.map((module,index) => <article class="technical-module"><div class="module-heading"><span>{module.label}</span><b>0{index+1}</b></div><h4>{module.title}</h4><p>{module.explanation}</p><ul class="mechanics">{module.mechanics.map((item) => <li>{item}</li>)}</ul><div class="code-label">▣ SAFE LAB NOTEBOOK</div><pre><code>{module.code}</code></pre><small class="code-caption">{module.caption}</small><ol class="module-sources">{module.sources.map((source) => <li><span><b>{source.book} · PAGE {source.page}</b><small>{source.note}</small></span></li>)}</ol></article>)}</div>
+</div></section>
+
+<section class="correlation-desk"><div class="shell">
+  <header class="correlation-head"><div><span>CROSS-BOOK CORRELATION</span><h3>{edition.correlation.title}</h3></div><p><b>THE OPERATING QUESTION</b>{edition.correlation.question}</p></header>
+  <div class="correlation-chain">{edition.correlation.stages.map((stage,index) => <article class="correlation-stage"><div class="chain-index">{String(index+1).padStart(2,'0')}</div><span>{stage.label}</span><h4>{stage.title}</h4><p>{stage.body}</p><div class="invariant"><b>INVARIANT</b>{stage.invariant}</div><ol><li><span><b>{stage.source.book} · PAGE {stage.source.page}</b><small>{stage.source.note}</small></span></li></ol></article>)}</div>
+</div></section>
+
+<section class="human-desk"><div class="shell">
+  <header class="human-head"><div><span>◉ THE HUMAN SYSTEMS REVIEW</span><h3>The mind under observation</h3></div><div class="research-stamp"><b>RESEARCH FILE</b><strong>{String(edition.research.length).padStart(2,'0')}</strong><small>PRIMARY STUDIES · UPDATED {displayDate.toUpperCase()}</small></div></header>
+  <p class="human-intro">A current research digest across behavioural psychology, CBT, neuropsychology and cognitive science. Each report separates the claim from its design and limitations; the systems parallels are analogies for thinking, never claims that people are machines.</p>
+  <div class="research-grid">{edition.research.map((study,index) => <article class="research-card"><div class="research-meta"><span>{study.field}</span><b>0{index+1}</b></div><h4>{study.title}</h4><div class="research-question"><b>THE QUESTION</b>{study.question}</div><dl><div><dt>DESIGN</dt><dd>{study.method}</dd></div><div><dt>FINDING</dt><dd>{study.finding}</dd></div><div><dt>LIMIT</dt><dd>{study.caveat}</dd></div></dl><div class="systems-note"><b>SYSTEMS LENS</b><p>{study.systemsLink}</p></div><a href={study.url} target="_blank" rel="noreferrer"><span>{study.journal} · {study.published}</span><span>↗</span></a></article>)}</div>
+  <div class="systems-bridge"><header><span>THE ANALOGY DESK</span><h4>Four bridges between engineered and human complexity</h4></header><div>{edition.research.map((study,index) => <article><b>0{index+1}</b><h5>{study.field}</h5><p><span>HUMAN</span>{study.finding}</p><p><span>SYSTEM</span>{study.systemsLink}</p></article>)}</div><small>These bridges transfer questions and methods—not diagnoses, mechanisms or moral conclusions. This section is educational and is not medical guidance.</small></div>
+</div></section>
+
+<section class="conclusion"><div class="shell conclusion-grid"><div><span>EDITORIAL SYNTHESIS</span><h3>{edition.synthesis.title}</h3><p>{edition.synthesis.body}</p></div><ol>{edition.synthesis.principles.map((item,index) => <li><b>0{index+1}</b>{item}</li>)}</ol></div></section>
+
+<section class="practice-lab shell">
+  <header class="lab-head"><div><span>THE CAPSTONE LAB</span><h3>{edition.lab.title}</h3><p>A bounded exercise that combines the systems, evidence and observation concepts from today’s edition.</p></div><dl><div><dt>TIMEBOX</dt><dd>{edition.lab.duration}</dd></div><div><dt>LEVEL</dt><dd>{edition.lab.difficulty}</dd></div><div><dt>CONCEPTS</dt><dd>{String(edition.lab.topics.length).padStart(2,'0')}</dd></div></dl></header>
+  <div class="topic-ribbon"><b>CONCEPTS IN PLAY</b>{edition.lab.topics.map((topic,index) => <span><i>0{index+1}</i>{topic}</span>)}</div>
+  <div class="mission-brief"><div><span>SCENARIO</span><p>{edition.lab.scenario}</p></div><div><span>FINAL DELIVERABLE</span><p>{edition.lab.deliverable}</p></div></div>
+  <ol class="lab-phases">{edition.lab.phases.map((phase,index) => <li><div class="phase-number">{String(index+1).padStart(2,'0')}</div><div class="phase-body"><span>PHASE {index+1}</span><h4>{phase.title}</h4><p>{phase.objective}</p><ul>{phase.actions.map((action) => <li>{action}</li>)}</ul><div class="expected-evidence"><b>EXPECTED EVIDENCE</b>{phase.evidence}</div></div></li>)}</ol>
+  <div class="lab-close"><article><span>ACCEPTANCE CRITERIA</span><ul>{edition.lab.success.map((item) => <li><span>✓</span>{item}</li>)}</ul></article><article><span>AFTER-ACTION REVIEW</span><ol>{edition.lab.questions.map((question,index) => <li><b>0{index+1}</b>{question}</li>)}</ol></article><aside><span>READ ALONG</span><ul>{edition.lab.sources.map((source) => <li><span><b>{source.book} · PAGE {source.page}</b><small>{source.note}</small></span></li>)}</ul></aside></div>
+  <small class="lab-safety">LAB SAFETY — Work only with benign data and processes on systems you own. Do not weaken controls, elevate privileges, establish persistence, or touch production environments.</small>
+</section>
+
+<footer class="footer shell"><span>Books compiled locally · research linked to original publications</span><span>Psychology coverage is educational, not clinical advice</span><span>Generated by local Codex orchestration</span></footer>
