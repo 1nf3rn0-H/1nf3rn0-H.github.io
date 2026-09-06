@@ -1,453 +1,444 @@
 {
-  "topic": "Detection Engineeing",
-  "desk": "Field Notes — Daily Technical Edition",
-  "title": "Make Detection Changes Reversible",
-  "standfirst": "Detection systems need explicit states, bounded actions, and tests for missed evidence; this edition connects telemetry design, rollout control, cognitive research, and benign failure simulation.",
+  "topic": "Field Notes — Daily Technical Edition — 2026-09-06 — Revision 7",
+  "desk": "Security Engineering",
+  "title": "Model Every Retry Before You Automate",
+  "standfirst": "Automation is reviewable when scripts expose guarded states, bounded retries, explicit response policy, measured timing, and staged evidence collection before an action reaches production systems.",
   "readTime": "12 min",
   "thesis": [
-    "A detection pipeline is a stateful control system. It receives partial observations, assigns evidence quality, changes state, and may trigger containment. The design must make each transition explicit because a detector can be correct about one event while wrong about the incident. Evidence can be delayed, redacted, duplicated, or absent. The practical unit of reliability is therefore not the alert rule alone. It is the complete transition from observation through correlation, response, rollback, and review, with clear abort conditions and retained evidence.",
-    "The strongest detection programs combine multiple observation paths with controlled change. Signatures provide fast coverage for known artifacts. Behavioral rules cover variation. Runtime state explains what an event means now. Rollouts and synthetic failures expose transition errors before production impact. Cognitive studies support only bounded engineering analogies: attention, learning, and memory are human mechanisms, not system components. The useful transfer is methodological. Separate transient context from durable state, measure both positive and negative outcomes, and test the conditions that make the detector fail."
+    "Automation should represent a workflow as a guarded state graph. The packet’s Prodtest example chains dependent checks, aborts after a failed prerequisite, and records graph state and verbose test output. Its responsible-automation guidance adds a second requirement: a failure posture must be explicit when integrity or access-control configuration is uncertain. A script that returns zero cannot prove readiness if dependencies, exceptions, or policy state remain unknown. Store state, guard, evidence identifier, timestamp, and failure reason so another engineer can reconstruct why the workflow advanced, stopped, degraded, or stayed untested.",
+    "Retries and instrumentation change what the system can claim. The packet separates intermittent completion from apparent recovery, latency from jitter, and low-cost API logging from CPU-intensive binary instrumentation. Those distinctions support a staged detector: validate prerequisites, run within a deadline, classify the outcome, escalate only across a named evidence gap, and preserve the original record. The result is not complete visibility. It is bounded automation with explicit unknown states, predictable degradation, and regression tests that keep known failure paths represented after the implementation changes."
   ],
   "reports": [
     {
-      "title": "Model the Detector as a State Machine",
-      "body": "Detection starts with a state model, not a list of indicators. Threat Hunting in the Cloud describes the move from known signatures and IOCs toward behavior and anomaly detection after minor code changes defeated fixed signatures. malware analysis detection engineering comprehensive lists signature database, file scanner, unpacker, and memory scanner as cooperating modules. Practical Purple Teaming treats event logs, PowerShell, Sysmon, Zeek, and YARA as sources with different value, not exhaustive coverage. The Art of Mac Malware, Volume 2 adds the time dimension: snapshots can miss activity between scans, while real-time monitoring narrows that gap. The design consequence is explicit state: observed, correlated, escalated, contained, and closed, each with evidence and exit criteria.",
-      "sources": [
-        {
-          "book": "Threat Hunting in the Cloud",
-          "page": 89,
-          "note": "Chapter 2 Modern Approach to Multi-Cloud Threat Hunting > Cyberthreat Detection, Threat Modeling, and the Need for Proactive Threat Hunting Within SOC > Cyberthreat Detection; sub-"
-        },
-        {
-          "book": "malware analysis detection engineering comprehensive",
-          "page": 801,
-          "note": "Part VI: Detection Engineering > Chapter 22: Antivirus Engines > Main Components of Antiviruses > Part VI: Detection Engineering > Main Components of Antiviruses"
-        },
-        {
-          "book": "Practical Purple Teaming",
-          "page": 163,
-          "note": "Part II: Attack Emulation and Detection Lab > Chapter 6: Collecting Telemetry > Chapter 6: Collecting Telemetry; event log, PowerShell, Sysmon, Zeek, and YARA scope."
-        }
-      ]
-    },
-    {
-      "title": "Separate Evidence Collection from State Mutation",
-      "body": "A detector should collect evidence before it changes control state. Cyberjutsu Cybersecurity for the Modern Ninja distinguishes active and passive sensors and notes that passive traces can preserve direction and path information. malware analysis detection engineering comprehensive describes generic signatures built from strings when hashes are too narrow, while Practical Purple Teaming presents Sigma as a vendor-agnostic rule format translated across log sources and query languages. The Art of Mac Malware, Volume 2 warns that unified logs can redact sensitive values as <private>. These mechanisms imply a typed evidence record: source, timestamp, subject, rule version, confidence, and redaction status. A state transition should fail closed when required fields are missing.",
-      "sources": [
-        {
-          "book": "Cyberjutsu Cybersecurity for the Modern Ninja",
-          "page": 90,
-          "note": "CONTENTS > SENSORS > SENSORS; active and passive detection techniques, sensor placement, traces, and direction."
-        },
-        {
-          "book": "malware analysis detection engineering comprehensive",
-          "page": 809,
-          "note": "Part VI: Detection Engineering > Chapter 22: Antivirus Engines > Signatures and Signature Module > Signature Categories > Generic Signatures"
-        },
-        {
-          "book": "Practical Purple Teaming",
-          "page": 200,
-          "note": "Part II: Attack Emulation and Detection Lab > Chapter 7: Network Traffic, Event Tracing, and Memory Scanning > Sigma; generic YAML-based, vendor-agnostic detection rules."
-        }
-      ]
-    },
-    {
-      "title": "Treat State Changes as Controlled Experiments",
-      "body": "State transitions should be tested as hypotheses. google site reliability engineering describes iterative troubleshooting: compare observed state with a theory, or change the system in a controlled way and observe the result. Its launch guidance supports gradual rollout so total behavior can be observed under real workloads. Building Secure and Reliable Systems adds mirrored requests, a small traffic fraction, and a reliable cancellation mechanism. Threat Hunting in the Cloud describes checkpointed workflows in which one step supplies input to the next and retries preserve ordered execution. Applied to detection, each release needs a bounded cohort, a measurable outcome, a rollback trigger, and a durable record of what ran.",
+      "title": "Represent readiness as state",
+      "body": "Scripts scale poorly when they encode configuration permutations as hidden flags and assume that a successful command means a service is ready. The selected SRE excerpt describes misconfigurations leaking into defaults, brittle shell scripts, and Prodtest checks that validate dependencies, consistency, and desired exceptions. Its graph output identifies the failed step and exposes more detailed test output. Treat that graph as a state machine: unknown at creation, pass only after its guard, fail with a reason, and skipped when an upstream failure blocks evaluation. This model preserves negative evidence. It also gives detection engineers a reviewable boundary between not observed, rejected, and accepted, which later response logic can consume without guessing.",
       "sources": [
         {
           "book": "google site reliability engineering",
-          "page": 104,
-          "note": "Chapter 12 - Effective Troubleshooting > Theory > Chapter 12 - Effective Troubleshooting > Theory"
-        },
-        {
-          "book": "google site reliability engineering",
-          "page": 268,
-          "note": "Chapter 27 - Reliable Product Launches at Scale > Selected Techniques for Reliable Launches > Feature Flag Frameworks"
+          "page": 68,
+          "note": "Prodtest validates dependencies, consistency, and exceptions through chained tests and graph state."
         },
         {
           "book": "Building Secure and Reliable Systems",
-          "page": 212,
-          "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Continuous Validation > Validation in Practice; cancellation, small traffic fractions, and mirrored requests."
+          "page": 193,
+          "note": "Degradation levels and actual load shedding should be recorded for diagnosis and impact analysis."
         }
       ]
     },
     {
-      "title": "Bound Automation with Abort and Retention Tests",
-      "body": "Automation fails when retries hide a persistent fault or when a detector records only successful matches. The Book of Batch Scripting recommends choosing check intervals and retry counts from observed runtimes and failure patterns, then testing simulated exit codes for retry, abort, and success paths. Evasion Engineering (Early Access) notes that Detection as Code pipelines commonly validate true positives while excluding false negatives. Building Secure and Reliable Systems recommends self-contained failure detection and recording degradation levels. Windows Internals, Part 2, 7th Edition shows that system transitions preserve execution context on a kernel stack. The operational rule is simple: retain transition context, expose degradation, and test missed detections explicitly.",
+      "title": "Make uncertainty select policy",
+      "body": "Response policy belongs in the data model, not in an operator’s memory. Building Secure and Reliable Systems distinguishes failing open for availability from failing closed for security when configuration or integrity cannot be verified, and it requires a declared minimum security posture. The same excerpt recommends self-contained failure detection and records degradation, load shedding, throttling, capacity, and user impact. Timing adds another guard. Linux System Programming defines latency as stimulus-to-response time and jitter as variation between responses; if stimulus time is unavailable, the pipeline must not call jitter latency. A retry ledger should classify timeout, cancellation, error, and completion separately.",
       "sources": [
         {
-          "book": "The Book of Batch Scripting",
-          "page": 405,
-          "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Restart > The Testing"
+          "book": "Building Secure and Reliable Systems",
+          "page": 194,
+          "note": "Fail-open and fail-closed choices depend on the declared security posture."
+        },
+        {
+          "book": "Building Secure and Reliable Systems",
+          "page": 193,
+          "note": "Self-contained detection and degradation reporting support diagnosis and capacity assessment."
+        },
+        {
+          "book": "Linux System Programming",
+          "page": 217,
+          "note": "Latency, jitter, deadlines, and timing observability limits are defined explicitly."
+        }
+      ]
+    },
+    {
+      "title": "Record execution preconditions",
+      "body": "Execution context determines whether a recorded event means what the detector thinks it means. Windows Internals explains that a user-mode APC is queued to a thread but delivered only when that thread enters an alertable wait, after which control transfers to the callback and execution resumes. A callback’s presence therefore does not prove delivery. The packet’s batch examples make the same operational point through intermittent hangs: a rerun can appear to fix a failure, while timeout and restart loops consume resources. Record queue time, delivery condition, deadline, termination cause, and retry number. If the precondition is absent, report non-observation rather than success.",
+      "sources": [
+        {
+          "book": "Windows Internals, Part 2, 7th Edition",
+          "page": 97,
+          "note": "User-mode APC delivery requires an alertable wait before callback execution."
         },
         {
           "book": "The Book of Batch Scripting",
-          "page": 411,
-          "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Core Auto-Kill-and-Restart Logic"
+          "page": 398,
+          "note": "Intermittent failures can appear fixed after rerunning."
         },
         {
-          "book": "ea evasion engineering 0426",
-          "page": 46,
-          "note": "PART I > E VA S ION S T R AT EG IE S > SOC Patterns; Detection as Code, CI/CD, version control, and the exclusion of false-negative tests."
+          "book": "The Book of Batch Scripting",
+          "page": 417,
+          "note": "Timeout and restart logic can be exercised with a synthetic intermittent hang."
+        }
+      ]
+    },
+    {
+      "title": "Escalate evidence by gap",
+      "body": "Evidence collection should escalate by coverage gap and cost. The malware-analysis excerpt distinguishes inexpensive API logging from CPU-intensive DBI, recommends host-side log dissection, and reserves DBI for samples whose initial logs are inadequate. Its adjacent definitions make the evidence structure concrete: a basic block has one entry and first exit; a trace groups blocks under one entry with multiple exits. Web Application Security supplies the persistence layer: dynamic analysis observes executed output but costs more, while vulnerability regression tests prevent known flaws from returning. Together, these sources support a detector that stores evidence level, coverage, cost, and expected failure test.",
+      "sources": [
+        {
+          "book": "malware analysis detection engineering comprehensive",
+          "page": 894,
+          "note": "DBI is costly and should be reserved for cases where lower-cost logs are inadequate."
+        },
+        {
+          "book": "malware analysis detection engineering comprehensive",
+          "page": 890,
+          "note": "Basic blocks and traces provide explicit execution structures."
+        },
+        {
+          "book": "Web Application Security",
+          "page": 337,
+          "note": "Dynamic analysis observes executed behavior and outputs at higher cost."
         }
       ]
     }
   ],
   "technical": {
-    "title": "Technical Standard",
-    "intro": "Implement the edition as a finite-state detector with immutable evidence records, explicit transition guards, bounded rollout, and negative-path tests. The code uses only synthetic in-memory data.",
+    "title": "A guarded automation pipeline",
+    "intro": "A defensible script records why it moved, what it observed, which precondition held, and what remains unknown. The following modules turn the packet into implementable controls and testable claims.",
     "modules": [
       {
-        "label": "M1",
-        "title": "Evidence records and guarded transitions",
-        "explanation": "A finite-state machine is a model with named states and permitted transitions. Use it to distinguish an observation from a decision and a decision from an action. The record should retain event identity, source, timestamp, rule version, evidence fields, and transition reason. A guard rejects escalation when required evidence is missing or redacted. This follows the packet’s emphasis on telemetry, logs, system knowledge, and failure modes, while preserving the distinction between a detected condition and a response. The synthetic implementation below mutates only an in-memory object and emits no external action.",
+        "label": "A",
+        "title": "Build a state graph",
+        "explanation": "Represent every validation check as a node with a guarded transition. A node begins unknown, becomes pass only after its predicate evaluates, becomes fail with a reason when the predicate is false, and becomes skipped when an upstream dependency blocks evaluation. Prodtest used dependent tests and later exposed their states as a graph, allowing engineers to locate the failed step and inspect detailed output. Store node ID, predicate, observed value, timestamp, upstream IDs, and evidence IDs. Do not collapse skipped or unknown into pass. The testable claim is that a reviewer can identify the first blocking predicate without rerunning the entire workflow.",
         "mechanics": [
-          "Start every record in observed state.",
-          "Require a correlation key before escalation.",
-          "Preserve the reason for every transition.",
-          "Reject unknown states instead of guessing."
+          "Use separate states for unknown, pass, fail, and skipped.",
+          "Store dependency edges and the evaluated guard.",
+          "Attach evidence IDs to observed states.",
+          "Preserve rejected downstream transitions."
         ],
-        "code": "from dataclasses import dataclass, field\nfrom enum import Enum\n\nclass State(Enum):\n    OBSERVED = \"observed\"\n    CORRELATED = \"correlated\"\n    ESCALATED = \"escalated\"\n    CLOSED = \"closed\"\n\n@dataclass\nclass Record:\n    event_id: str\n    state: State = State.OBSERVED\n    evidence: list[str] = field(default_factory=list)\n    reason: str = \"created\"\n\ndef advance(record, signal):\n    allowed = {\n        (State.OBSERVED, \"correlate\"): State.CORRELATED,\n        (State.CORRELATED, \"escalate\"): State.ESCALATED,\n        (State.ESCALATED, \"close\"): State.CLOSED,\n    }\n    target = allowed.get((record.state, signal))\n    if target is None:\n        raise ValueError(f\"invalid transition: {record.state.value} -> {signal}\")\n    if signal != \"correlate\" and not record.evidence:\n        raise ValueError(\"transition requires retained evidence\")\n    record.state, record.reason = target, signal\n    return record\n\nsample = Record(\"synthetic-001\", evidence=[\"process_name=demo\"])\nfor signal in (\"correlate\",)",
-        "caption": "Synthetic state-transition code with no filesystem, network, process, or response side effects.",
+        "code": "from dataclasses import dataclass, field\nfrom enum import Enum\n\nclass State(str, Enum):\n    UNKNOWN = 'unknown'\n    PASS = 'pass'\n    FAIL = 'fail'\n    SKIPPED = 'skipped'\n\n@dataclass\nclass Node:\n    state: State = State.UNKNOWN\n    reason: str = ''\n    evidence: list[str] = field(default_factory=list)\n\ngraph = {\n    'config': Node(State.PASS, 'synthetic fixture', ['cfg-001']),\n    'dependency': Node(State.FAIL, 'synthetic mismatch', ['dep-001']),\n    'readiness': Node(State.SKIPPED, 'blocked by dependency', []),\n}\n\nfor name, node in graph.items():\n    print(name, node.state.value, node.reason, node.evidence)",
+        "caption": "Benign synthetic example: a read-only state graph with explicit failure and dependency-blocked outcomes.",
         "sources": [
           {
             "book": "google site reliability engineering",
-            "page": 104,
-            "note": "Chapter 12 - Effective Troubleshooting > Theory > Chapter 12 - Effective Troubleshooting > Theory"
+            "page": 68,
+            "note": "Prodtest chains dependent tests, aborts after failure, and exposes graph states and detailed output."
           },
           {
-            "book": "Threat Hunting in the Cloud",
-            "page": 404,
-            "note": "Part III Hunting in AWS > Chapter 7 AWS Reference Architecture > AWS Reference Architecture > The Detect and Respond Functions > AWS Step Functions"
+            "book": "Building Secure and Reliable Systems",
+            "page": 193,
+            "note": "Recorded degradation and load shedding provide evidence about current system state."
+          }
+        ]
+      },
+      {
+        "label": "B",
+        "title": "Declare response posture",
+        "explanation": "A response mechanism needs a declared posture before it encounters uncertainty. Building Secure and Reliable Systems distinguishes fail-open behavior, which preserves availability, from fail-closed behavior, which protects security when integrity or access-control configuration cannot be verified. The correct choice depends on the organization’s minimum security requirement and reliability needs. Store posture, trigger, action, degradation level, and recovery condition as data. Prefer self-contained detection when an external signal could force a fleet-wide outage. The testable claim is that a reviewer can predict the action for partial configuration loss without reading hidden control flow.",
+        "mechanics": [
+          "Declare fail-open or fail-closed per asset and operation.",
+          "Record the trigger and degraded capability.",
+          "Define recovery evidence before deployment.",
+          "Test partial and total configuration failure separately."
+        ],
+        "code": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Policy:\n    posture: str\n    trigger: str\n    action: str\n    recovery: str\n\npolicy = Policy(\n    posture='fail-closed',\n    trigger='synthetic_acl_unverified',\n    action='deny_sensitive_operation',\n    recovery='synthetic_acl_verified',\n)\nprint(policy)",
+        "caption": "Benign synthetic policy data; the example performs no enforcement and changes no system state.",
+        "sources": [
+          {
+            "book": "Building Secure and Reliable Systems",
+            "page": 194,
+            "note": "Fail-open and fail-closed tradeoffs require an explicit security posture."
+          },
+          {
+            "book": "Building Secure and Reliable Systems",
+            "page": 193,
+            "note": "Self-contained detection and degradation reporting limit external failure effects."
+          },
+          {
+            "book": "ea evasion engineering 0426",
+            "page": 32,
+            "note": "Reliability requires deliberate exception handling for runtime failures across diverse systems."
+          }
+        ]
+      },
+      {
+        "label": "C",
+        "title": "Separate timeout from completion",
+        "explanation": "Retries alter both resource use and evidence quality. The Book of Batch Scripting describes intermittent failures that appear fixed after a rerun and demonstrates testing for hangs with timeout and restart logic. Linux System Programming defines latency as time from stimulus to response, distinguishes jitter as response-to-response variation, and notes that stimulus timestamps may be unavailable. Windows Internals adds a delivery precondition: a user-mode APC runs only when its thread enters an alertable wait. Store attempt number, monotonic start, deadline, outcome, termination cause, and delivery status. The testable claim is that timeout and missing delivery cannot produce a completion event.",
+        "mechanics": [
+          "Use monotonic time for deadlines.",
+          "Classify timeout, cancellation, error, and completion separately.",
+          "Record retry count and termination cause.",
+          "Mark delivery unknown when its precondition was not observed."
+        ],
+        "code": "from dataclasses import dataclass\nfrom time import monotonic\n\n@dataclass\nclass Attempt:\n    number: int\n    started: float\n    deadline: float\n    outcome: str\n\nstarted = monotonic()\nrecord = Attempt(1, started, started + 0.1, 'synthetic_timeout')\nprint(record.outcome, record.number, record.deadline >= record.started)",
+        "caption": "Read-only timing model using a synthetic timeout; it does not launch or restart a process.",
+        "sources": [
+          {
+            "book": "The Book of Batch Scripting",
+            "page": 417,
+            "note": "Timeout and restart paths can be tested with a synthetic hang."
+          },
+          {
+            "book": "Linux System Programming",
+            "page": 217,
+            "note": "Latency and jitter are different measurements with different observability requirements."
           },
           {
             "book": "Windows Internals, Part 2, 7th Edition",
-            "page": 62,
-            "note": "Chapter 8 System mechanisms > Trap dispatching > Trap dispatching; saved execution context during kernel transitions."
-          }
-        ]
-      },
-      {
-        "label": "M2",
-        "title": "Controlled rollout and rollback",
-        "explanation": "A detector release is a behavior change, even when the rule text appears small. Roll it out to a bounded synthetic cohort or mirrored evaluation path, then compare detection outcomes, processing delay, duplicate rate, and false-negative cases. Keep cancellation independent from the detector under test. Record the active version and cohort in every result. A rollback must return the rule set to the last known-good version without deleting evidence from the failed version. This is an engineering control, not a claim that real traffic is risk-free. The packet supports gradual observation, mirrored requests, and quick experiment cancellation.",
-        "mechanics": [
-          "Assign each evaluation to one rule version.",
-          "Compare old and new outcomes on identical inputs.",
-          "Abort on latency, error, or evidence-loss thresholds.",
-          "Keep failed-version records available for review."
-        ],
-        "code": "",
-        "caption": "",
-        "sources": [
-          {
-            "book": "google site reliability engineering",
-            "page": 268,
-            "note": "Chapter 27 - Reliable Product Launches at Scale > Selected Techniques for Reliable Launches > Feature Flag Frameworks"
-          },
-          {
-            "book": "Building Secure and Reliable Systems",
-            "page": 212,
-            "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Continuous Validation > Validation in Practice"
-          },
-          {
-            "book": "Building Secure and Reliable Systems",
-            "page": 193,
-            "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Controlling Degradation > Deploy Response Mechanisms"
-          }
-        ]
-      },
-      {
-        "label": "M3",
-        "title": "Negative paths and observability limits",
-        "explanation": "A passing true-positive test does not show that the detector sees the whole system. Test missing fields, redacted values, delayed events, duplicate events, unsupported platforms, and benign lookalikes. Separate retryable faults from terminal failures and measure how much context survives each transition. The packet’s sources support synthetic exit codes, interval selection based on observed runtime, generic signatures that avoid unnecessary hashes, and explicit degradation reporting. They do not establish a universal threshold. Choose thresholds from local baselines, document the uncertainty, and review false negatives as first-class test results.",
-        "mechanics": [
-          "Inject one failure mode per test case.",
-          "Check terminal and retryable outcomes separately.",
-          "Measure evidence loss at every transition.",
-          "Report degraded coverage with the result."
-        ],
-        "code": "",
-        "caption": "",
-        "sources": [
-          {
-            "book": "The Book of Batch Scripting",
-            "page": 405,
-            "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Restart > The Testing"
-          },
-          {
-            "book": "The Book of Batch Scripting",
-            "page": 411,
-            "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Core Auto-Kill-and-Restart Logic"
-          },
-          {
-            "book": "Building Secure and Reliable Systems",
-            "page": 193,
-            "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Controlling Degradation > Deploy Response Mechanisms"
+            "page": 97,
+            "note": "User-mode APC delivery depends on an alertable wait state."
           }
         ]
       }
     ]
   },
   "correlation": {
-    "title": "Bounded cross-domain correlation",
-    "question": "What engineering controls follow when detection is treated as observation, learning, state, and intervention?",
+    "title": "From script execution to evidence quality",
+    "question": "How should automation advance, respond, measure, escalate, and regress when its observations are incomplete or expensive?",
     "stages": [
       {
-        "label": "S1",
-        "title": "Observe before deciding",
-        "body": "Cyberjutsu Cybersecurity for the Modern Ninja describes active and passive sensors, while The Art of Mac Malware, Volume 2 contrasts snapshots with real-time monitoring. The bounded analogy is that a detector needs both point-in-time and continuous evidence paths. Human sensing is not equivalent to endpoint telemetry, so the transfer stops at collection design.",
-        "invariant": "No state change occurs without an identified observation source.",
-        "source": {
-          "book": "Cyberjutsu Cybersecurity for the Modern Ninja",
-          "page": 90,
-          "note": "CONTENTS > SENSORS > SENSORS; active and passive detection techniques, traces, and sensor placement."
-        }
-      },
-      {
-        "label": "S2",
-        "title": "Update from evidence",
-        "body": "google site reliability engineering frames troubleshooting as repeated hypothesis testing against telemetry and logs. Social inequity disrupts reward-based learning shows that contextual information can alter learning rates in humans. The bounded systems parallel is to test whether alert context changes rule performance; it is not a claim that detectors learn like people.",
-        "invariant": "Every update must identify the observation that supported or disconfirmed it.",
+        "label": "1",
+        "title": "Build guarded state",
+        "body": "Start with dependency-aware nodes. A downstream readiness state can pass only after its guard succeeds. A failed prerequisite blocks dependent checks and preserves the predicate, observed value, and evidence identifier for review.",
+        "invariant": "No dependent state becomes pass without its guard.",
         "source": {
           "book": "google site reliability engineering",
-          "page": 104,
-          "note": "Chapter 12 - Effective Troubleshooting > Theory > Chapter 12 - Effective Troubleshooting > Theory"
+          "page": 68,
+          "note": "Prodtest uses dependent tests, aborts on failure, and exposes graph state."
         }
       },
       {
-        "label": "S3",
-        "title": "Make attention explicit",
-        "body": "Practical Purple Teaming presents Sigma as a portable expression of detection logic across sources. The cognitive science study Responses guide attention found that learned responses biased later spatial selection. The bounded analogy is that prior rule matches can bias search order, so analysts should expose ranking and coverage rather than mistake attention for complete visibility.",
-        "invariant": "Priority changes must remain inspectable and must not erase lower-ranked evidence.",
-        "source": {
-          "book": "Practical Purple Teaming",
-          "page": 200,
-          "note": "Part II: Attack Emulation and Detection Lab > Chapter 7: Network Traffic, Event Tracing, and Memory Scanning > Sigma"
-        }
-      },
-      {
-        "label": "S4",
-        "title": "Separate transient context from retention",
-        "body": "The cognitive study on working memory and reinforcement learning found immediate punishment avoidance with weak durable retention. The bounded engineering analogy is to separate an alert’s short-lived triage context from persistent rule, case, and evidence state. This does not map cognitive subsystems onto software; it supplies a testable distinction between ephemeral and retained information.",
-        "invariant": "A closed case must retain the evidence needed to reproduce its transition.",
-        "source": {
-          "book": "The Book of Batch Scripting",
-          "page": 405,
-          "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Restart > The Testing"
-        }
-      },
-      {
-        "label": "S5",
-        "title": "Intervene under a stop condition",
-        "body": "Building Secure and Reliable Systems requires quick cancellation of injected behavior and supports small traffic fractions or mirrored requests. CBT research shows that modular components can be evaluated in factorial combinations, but the clinical result is not an operations recipe. The bounded transfer is to isolate detector components, define abort criteria, and inspect interaction effects.",
-        "invariant": "An experiment can stop independently of the component being evaluated.",
+        "label": "2",
+        "title": "Declare response",
+        "body": "When integrity or access-control state is unverified, select a declared posture. The record must identify whether availability or security has priority, what capability degrades, and which evidence permits recovery.",
+        "invariant": "Uncertainty maps to a declared response.",
         "source": {
           "book": "Building Secure and Reliable Systems",
-          "page": 212,
-          "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Continuous Validation > Validation in Practice"
+          "page": 194,
+          "note": "Fail-open and fail-closed behavior must reflect the security posture."
+        }
+      },
+      {
+        "label": "3",
+        "title": "Bound execution",
+        "body": "Run each attempt with a deadline and a termination cause. A timeout can trigger recovery or escalation, but it cannot establish completion. Keep latency separate from jitter when the stimulus timestamp is unavailable.",
+        "invariant": "Timeout is never completion.",
+        "source": {
+          "book": "Linux System Programming",
+          "page": 217,
+          "note": "Latency and jitter have different definitions and measurement limits."
+        }
+      },
+      {
+        "label": "4",
+        "title": "Escalate selectively",
+        "body": "Use inexpensive evidence first and reserve heavier instrumentation for a named coverage gap. Preserve the reason for escalation, expected added evidence, CPU cost, and the final coverage statement.",
+        "invariant": "Escalation requires an evidence gap.",
+        "source": {
+          "book": "malware analysis detection engineering comprehensive",
+          "page": 894,
+          "note": "DBI should be reserved for cases where ordinary logs are inadequate."
+        }
+      },
+      {
+        "label": "5",
+        "title": "Regress the failure",
+        "body": "Represent known failures as repeatable tests. A synthetic hang should reach timeout rather than pass, and a known vulnerability test should fail when the flaw returns. Review expected state, observed state, and mismatch.",
+        "invariant": "A repaired failure remains represented by a test.",
+        "source": {
+          "book": "Web Application Security",
+          "page": 338,
+          "note": "Vulnerability regression tests prevent known flaws from returning."
         }
       }
     ]
   },
   "research": [
     {
-      "field": "Behavioural psychology",
-      "published": "2025-08-16",
-      "title": "Social inequity disrupts reward-based learning",
-      "journal": "Communications Psychology",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40819098/",
-      "question": "Does unequal reward sharing change how people learn action-outcome contingencies when another person receives part of each outcome?",
-      "method": "Three online experiments used eight blocks of image-based three-choice trials, manipulating advantageous versus disadvantageous reward splits and partner occupation; Studies 2 and 3 held personal reward constant or reduced stimulus load, then compared behavioral learning curves and computational reinforcement-learning models.",
-      "finding": "Participants learned more slowly and less successfully when receiving the smaller share; in the lower-load study, partner warmth and competence also predicted learning, and social-context models outperformed baseline reinforcement-learning models.",
-      "caveat": "Rewards and partners were hypothetical, participants were young United States adults, and studies were not preregistered; generalization across socioeconomic settings and populations remains open.",
-      "systemsLink": "Bounded analogy: detector feedback may vary with alert ownership and workload, but human social valuation is not a system telemetry mechanism."
+      "field": "behavioural psychology",
+      "published": "2025",
+      "title": "Reinforcing implementation intentions with imagery increases physical activity habit strength and behaviour",
+      "journal": "British Journal of Health Psychology",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40102904/",
+      "question": "Does reinforcing if-then implementation intentions with mental imagery increase habit strength and physical activity over repeated follow-up measurements?",
+      "method": "A four-condition randomized online study recruited adults through Prolific; 249 completed baseline, 186 completed post-intervention and 12-week follow-up measures across four weeks. Mixed repeated-measures ANOVAs compared habit strength and self-reported activity across imagery, implementation-intention, combined, and control conditions.",
+      "finding": "The combined condition increased habit strength by week three, maintained it post-intervention, and increased it again at follow-up; physical-activity differences between groups were not consistently significant across time, and attrition was 28 percent.",
+      "caveat": "The sample self-selected participants motivated to change, used paid online recruitment, lost 28 percent by follow-up, and measured activity with seven-day self-report rather than objective sensors.",
+      "systemsLink": "Bounded analogy: explicit if-then guards may improve repeatability, but human habit formation does not establish detector reliability or operator behaviour."
     },
     {
       "field": "CBT",
-      "published": "2025-04-23",
-      "title": "Cognitive behavioral therapy skills via a smartphone app for subthreshold depression among adults in the community: the RESiLIENT randomized controlled trial",
-      "journal": "Nature Medicine",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40269333/",
-      "question": "Which CBT skills produce measurable short-term change when delivered separately or in combinations through a smartphone application?",
-      "method": "A master randomized study recruited 3,936 adults with subthreshold depression in Japan between September 2022 and February 2024; four 2 × 2 factorial trials compared five app-delivered skills and combinations against delayed treatment, health information, or self-check controls, using week-six PHQ-9 change.",
-      "finding": "All five skills and their combinations outperformed all three controls, with effects from −0.67 to −0.16 on symptom severity; follow-up was 97% and app adherence was 84%.",
-      "caveat": "The sample had subthreshold symptoms, outcomes were measured at six weeks, and the trial tested one app implementation; findings do not establish durable effects across clinical populations.",
-      "systemsLink": "Bounded analogy: modular rule tests can isolate active detection components, but symptom change and alert performance are not equivalent outcomes."
+      "published": "2024",
+      "title": "Internet-Guided Cognitive Behavioral Therapy for Insomnia Among Patients With Traumatic Brain Injury: A Randomized Clinical Trial",
+      "journal": "JAMA Network Open",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38980675/",
+      "question": "Did fully remote CBT for insomnia improve insomnia versus sleep education in service members and veterans with traumatic brain injury?",
+      "method": "A 3:1 randomized clinical trial screened 204 adults, randomized 125 military service members and veterans, and compared six weekly internet CBT-I modules with online education; outcomes were assessed at baseline, post-intervention, and three months later.",
+      "finding": "Among 50 post-intervention completers, ISI scores fell 6.0 points with eCBT-I versus 2.3 with education; the between-group difference was 3.5 points, d = −0.32, and improvement correlated with several secondary outcomes.",
+      "caveat": "Only 50 completed post-intervention and 41 completed follow-up; participants were volunteers, were not formally blinded, and outcomes were mainly self-reported, so retention and expectancy limit generalization.",
+      "systemsLink": "Bounded analogy: staged feedback can improve a workflow, but a clinical intervention effect cannot validate security automation or transfer to operators."
     },
     {
-      "field": "Neuropsychology",
-      "published": "2025-05-03",
-      "title": "Development of the KeyStrokes test: An online neuropsychological assessment for attention, processing speed and executive function",
-      "journal": "Journal of Neuropsychology",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40317868/",
-      "question": "Can an online test measure attention, processing speed, and executive function with convergent validity?",
-      "method": "A clinical referral sample of 87 people completed six KeyStrokes subtests plus established neuropsychological tests; researchers assessed internal consistency, cross-test correlations, and regression relationships with age, education, ethnicity, and gender.",
-      "finding": "KeyStrokes subtests correlated strongly with one another above rho .72, aligned selectively with comparator tests, and showed age effects; education did not predict performance, while ethnicity related to some subtests.",
-      "caveat": "This was a pilot proof-of-concept study using a referred clinical sample; correlations do not establish diagnostic utility, and the authors call for additional evidence before online deployment.",
-      "systemsLink": "Bounded analogy: detector health metrics need validation against independent measures, not internal consistency alone and operational outcomes."
+      "field": "neuropsychology",
+      "published": "2025",
+      "title": "Anterior prefrontal EEG theta activities indicate memory and executive functions in patients with epilepsy",
+      "journal": "Epilepsia",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39760669/",
+      "question": "Can task-evoked anterior prefrontal theta power distinguish memory and executive-function performance in patients with epilepsy?",
+      "method": "Researchers recorded clinical EEG while 86 patients with epilepsy performed CANTAB tasks probing visual memory, spatial memory, working memory, and executive function; age- and gender-normalized scores defined performance groups for frequency-band and cortical-area comparisons across tasks.",
+      "finding": "Lower anterior prefrontal theta power marked impaired performance across all four behavioural measures, with the effect confined to frontal-pole electrodes Nz, Fpz, Fp1, and Fp2 during task performance in the study.",
+      "caveat": "The sample consisted of patients undergoing clinical EEG monitoring, and the observational grouping does not establish that theta changes cause cognitive performance or generalize to healthy populations.",
+      "systemsLink": "Bounded analogy: event-specific telemetry may correlate with task state, but correlation is not a causal detector signal and electrode coverage is not system coverage."
     },
     {
-      "field": "Cognitive science",
-      "published": "2025-09-01",
-      "title": "How working memory and reinforcement learning interact when avoiding punishment and pursuing reward concurrently",
-      "journal": "Journal of Experimental Psychology: General",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40892600/",
-      "question": "How does working memory interact with reinforcement learning when people pursue reward and avoid punishment concurrently?",
-      "method": "Researchers administered a novel reward-punishment task to 298 United States adults recruited online, retaining 275 after quality control; interleaved learning and test phases separated fast working-memory use from longer-term reinforcement-learning retention, with computational modeling.",
-      "finding": "Working memory improved immediate punishment avoidance, but reinforcement learning retained little punishment information; mid-task working-memory blunting of reinforcement learning disappeared after more prediction errors, with substantial individual differences. Depression, anxiety, and rumination largely spared task performance.",
-      "caveat": "The deterministic task produced few errors, could not isolate episodic memory, and used a nonhierarchical computational analysis; questionnaire attention checks may have missed some careless responding.",
-      "systemsLink": "Bounded analogy: short-lived alert context can improve immediate triage while durable rule memory lags, but cognitive subsystems are not detection stages."
+      "field": "cognitive science",
+      "published": "2025",
+      "title": "Differentiating Reinforcement Learning and Episodic Memory in Value-Based Decisions in Parkinson's Disease",
+      "journal": "The Journal of Neuroscience",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40262901/",
+      "question": "Can a controlled decision task separate incremental reward learning from one-shot episodic memory in Parkinson's disease?",
+      "method": "The study compared 26 Parkinson's patients with 26 healthy controls using 150-trial card choices, repeated objects, on- and off-medication sessions, a subsequent memory test, and a combined reinforcement-learning model that estimated sensitivity, learning rates, and episodic value.",
+      "finding": "Patients performed as well as controls when using episodic memory but showed impaired incremental reward learning off medication; dopamine replacement improved the learning deficit and enhanced memory for motivationally relevant values.",
+      "caveat": "The small, selected sample excluded participants with cognitive impairment, and the authors note that behaviour may mix reinforcement learning with working memory; model-based learning also remains unresolved.",
+      "systemsLink": "Bounded analogy: maintain separate event-memory and aggregate-state features, because one can remain informative when feedback-based updating fails; the domains are not equivalent."
     }
   ],
   "synthesis": {
-    "title": "Operational principles",
-    "body": "Reliable detection requires two separate proofs. First, the system must show that it can observe and classify a known or simulated condition. Second, it must show that state, evidence, and response remain correct when inputs are delayed, incomplete, duplicated, redacted, or adversarially shaped. The packet’s books converge on controlled transitions, component separation, gradual exposure, safe cancellation, explicit degradation, and synthetic failure injection. The research supports only bounded analogies about attention, learning, modularity, and retention. Use those analogies to design tests, not to explain away operational gaps or substitute clinical findings for system measurements.",
+    "title": "Automation should preserve uncertainty",
+    "body": "The packet supports a single engineering rule: every automated action should be explainable as a guarded transition over time-bounded, coverage-labeled evidence. Prodtest supplies dependency graphs. Responsible degradation supplies response policy. Batch testing and Linux timing clarify why retry and completion must remain separate. Windows execution conditions show that queued work is not delivered work. Malware analysis and web security add selective escalation and regression persistence. The research studies offer bounded parallels about feedback, measurement, and separate memory paths, but they do not validate clinical or operational equivalence. The practical design is explicit state, explicit uncertainty, and repeatable failure tests.",
     "principles": [
-      "Name every state and permitted transition.",
-      "Retain evidence before changing control state.",
-      "Test false negatives and evidence loss.",
-      "Make rollback independent of detection logic."
+      "Represent unknown separately from pass.",
+      "Declare response posture before deployment.",
+      "Treat timeout as an outcome.",
+      "Record delivery preconditions and coverage gaps."
     ]
   },
   "lab": {
-    "title": "Synthetic detection transition review",
-    "duration": "75 minutes",
+    "title": "Synthetic automation review",
+    "duration": "30 minutes",
     "difficulty": "Advanced",
     "topics": [
-      "Finite-state detection",
-      "Telemetry normalization",
-      "Controlled rollout and rollback",
-      "Negative-path testing",
-      "Observability limits"
+      "guarded state graphs",
+      "response posture",
+      "retry semantics",
+      "latency and jitter",
+      "staged instrumentation"
     ],
-    "scenario": "Review a benign synthetic process-event stream containing known, variant, delayed, duplicated, redacted, and missing-field records.",
-    "deliverable": "Produce a versioned transition table, test output, coverage report, and short review memo identifying one accepted gap and one rollback trigger.",
+    "scenario": "A synthetic security pipeline receives configuration checks, a timed worker result, and a low-cost analysis record; reviewers must determine readiness, response, timing, escalation, and regression outcomes.",
+    "deliverable": "Produce a state table, policy record, retry ledger, timing note, escalation decision, regression result, and one explicit observability limitation.",
     "phases": [
       {
-        "title": "Define the state model",
-        "objective": "Specify states, required fields, guards, and terminal outcomes before writing rules.",
+        "title": "Build the graph",
+        "objective": "Represent configuration and dependency checks as guarded states.",
         "actions": [
-          "Create observed, correlated, escalated, contained, and closed states.",
-          "List required evidence for each transition.",
-          "Define retryable, terminal, and abort conditions."
+          "Create config, dependency, and readiness nodes.",
+          "Assign pass, fail, skipped, and unknown outcomes.",
+          "Attach evidence IDs to observed nodes."
         ],
-        "evidence": "A transition table shows every permitted and rejected path."
+        "evidence": "A table of nodes, guards, states, reasons, and evidence IDs."
       },
       {
-        "title": "Build synthetic telemetry",
-        "objective": "Generate benign in-memory events that exercise normal and degraded evidence paths.",
+        "title": "Apply policy",
+        "objective": "Choose a posture for an unverified synthetic access-control input.",
         "actions": [
-          "Create process, file, and network records with stable event identifiers.",
-          "Add duplicates, delays, redactions, and missing correlation keys.",
-          "Record source, timestamp, rule version, and evidence status."
+          "Write a fail-open or fail-closed policy.",
+          "Specify trigger, action, degradation, and recovery.",
+          "Explain the security requirement behind the choice."
         ],
-        "evidence": "A fixture set contains at least one case for every declared failure mode."
+        "evidence": "A policy record with a short tradeoff note."
       },
       {
-        "title": "Normalize and evaluate rules",
-        "objective": "Apply one generic string rule and one Sigma-like structured rule to identical fixtures.",
+        "title": "Exercise timing",
+        "objective": "Separate completion, timeout, retry, and cancellation.",
         "actions": [
-          "Separate raw evidence from normalized fields.",
-          "Run both rules against known and variant benign records.",
-          "Record matches, misses, latency, and evidence loss."
+          "Run fixed synthetic attempts with monotonic deadlines.",
+          "Record attempt number and termination cause.",
+          "Mark latency unknown when no stimulus timestamp exists."
         ],
-        "evidence": "A comparison table shows rule-version outcomes for every fixture."
+        "evidence": "A retry ledger and timing note rejecting one false-success interpretation."
       },
       {
-        "title": "Run bounded rollout tests",
-        "objective": "Compare old and new rule behavior on the same synthetic cohort with an abort threshold.",
+        "title": "Escalate evidence",
+        "objective": "Decide whether a coverage gap justifies heavier analysis.",
         "actions": [
-          "Assign fixtures to old and candidate rule versions.",
-          "Trigger abort on evidence loss or unexpected terminal errors.",
-          "Restore the old version without deleting candidate results."
+          "Provide a synthetic low-cost log record.",
+          "Mark missing coverage explicitly.",
+          "Escalate only with a reason code."
         ],
-        "evidence": "The log proves cohort assignment, abort reason, rollback state, and retained results."
+        "evidence": "An escalation decision with expected added evidence and cost."
       },
       {
-        "title": "Review observability limits",
-        "objective": "Assess what the detector cannot distinguish and propose one focused follow-up test.",
+        "title": "Regress the failure",
+        "objective": "Turn one failure path into a repeatable defensive test.",
         "actions": [
-          "Inspect false negatives and redacted fields.",
-          "Measure delayed and duplicated event handling.",
-          "Write one accepted limitation and one testable remediation claim."
+          "Create a synthetic known-bad input.",
+          "Assert the expected blocked state.",
+          "Record the observed state and mismatch."
         ],
-        "evidence": "The review memo links each limitation to a fixture and a proposed measurement."
+        "evidence": "Test output and a short after-action note."
       }
     ],
     "success": [
-      "All valid transitions pass with retained evidence.",
-      "Invalid transitions fail without external side effects.",
-      "The candidate version can be aborted and rolled back.",
-      "False-negative fixtures appear in the final report.",
-      "The memo states one bounded limitation and one next test."
+      "Every graph transition has a guard.",
+      "Unknown is distinct from pass.",
+      "The response posture and recovery condition are explicit.",
+      "Timeout is not reported as success.",
+      "The escalation reason names an evidence gap."
     ],
     "questions": [
-      "Which transition loses the most evidence?",
-      "What threshold should trigger rollback?",
-      "Which false negative deserves a new sensor?"
+      "Which guard blocked readiness?",
+      "What evidence supports each state?",
+      "Which attempt ended by timeout?",
+      "What cannot the telemetry observe?"
     ],
     "sources": [
       {
-        "book": "Practical Purple Teaming",
-        "page": 200,
-        "note": "Part II: Attack Emulation and Detection Lab > Chapter 7: Network Traffic, Event Tracing, and Memory Scanning > Sigma"
-      },
-      {
         "book": "google site reliability engineering",
-        "page": 268,
-        "note": "Chapter 27 - Reliable Product Launches at Scale > Selected Techniques for Reliable Launches > Feature Flag Frameworks"
+        "page": 68,
+        "note": "Graph-shaped validation and failed-step identification."
       },
       {
         "book": "Building Secure and Reliable Systems",
-        "page": 193,
-        "note": "Part II. Designing Systems > Chapter 8. Design for Resilience > Controlling Degradation > Deploy Response Mechanisms"
+        "page": 194,
+        "note": "Response posture under uncertainty."
       },
       {
         "book": "The Book of Batch Scripting",
-        "page": 405,
-        "note": "Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Restart > The Testing"
+        "page": 417,
+        "note": "Synthetic hang and timeout testing."
       },
       {
-        "book": "The Art of Mac Malware, Volume 2",
-        "page": 175,
-        "note": "Part II: System Monitoring > 6. Log Monitoring > The Unified Logging Subsystem"
+        "book": "Linux System Programming",
+        "page": 217,
+        "note": "Latency and jitter distinction."
+      },
+      {
+        "book": "malware analysis detection engineering comprehensive",
+        "page": 894,
+        "note": "Selective expensive instrumentation."
       }
     ]
   },
   "meta": {
     "date": "2026-09-06",
-    "revision": 6,
-    "signature": "5781e45d6c146f095ab5",
-    "generatedAt": "2026-09-06T12:02:56.859Z",
+    "revision": 7,
+    "signature": "b7d1bedd4da092e403b7",
+    "generatedAt": "2026-09-06T17:36:30.832Z",
     "generator": "Codex CLI",
     "model": "gpt-5.6-luna",
     "reasoning": "high",
     "retrieval": {
-      "focus": "Detection Engineeing",
+      "focus": "Scripting and automation",
       "method": "SQLite FTS5 + BGE small embeddings",
       "sections": [
+        "google site reliability engineering::Chapter 7 - The Evolution of Automation at Google > Soothing the Pain: Applying Automation to Cluster Turnups > Detecting Inconsistencies with Prodtest",
         "google site reliability engineering::Chapter 12 - Effective Troubleshooting > Theory",
-        "google site reliability engineering::Chapter 27 - Reliable Product Launches at Scale > Selected Techniques for Reliable Launches > Feature Flag Frameworks",
-        "Building Secure and Reliable Systems::Part II. Designing Systems > Chapter 8. Design for Resilience > Continuous Validation > Validation in Practice",
+        "Building Secure and Reliable Systems::Part II. Designing Systems > Chapter 8. Design for Resilience > Controlling Degradation > Automate Responsibly",
         "Building Secure and Reliable Systems::Part II. Designing Systems > Chapter 8. Design for Resilience > Controlling Degradation > Deploy Response Mechanisms",
-        "Threat Hunting in the Cloud::Part III Hunting in AWS > Chapter 7 AWS Reference Architecture > AWS Reference Architecture > The Detect and Respond Functions > AWS Step Functions",
-        "Threat Hunting in the Cloud::Part I Threat Hunting Frameworks > Chapter 2 Modern Approach to Multi-Cloud Threat Hunting > Cyberthreat Detection, Threat Modeling, and the Need for Proactive Threat Hunting Within SOC > Cyberthreat Detection",
-        "malware analysis detection engineering comprehensive::Part VI: Detection Engineering > Chapter 22: Antivirus Engines > Signatures and Signature Module > Signature Categories > Generic Signatures",
-        "malware analysis detection engineering comprehensive::Part VI: Detection Engineering > Chapter 22: Antivirus Engines > Main Components of Antiviruses",
-        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Core Auto-Kill-and-Restart Logic",
-        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Restart > The Testing",
-        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > Trap dispatching",
-        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms",
-        "Cyberjutsu Cybersecurity for the Modern Ninja::CONTENTS > SENSORS",
-        "Cyberjutsu Cybersecurity for the Modern Ninja::CONTENTS > FIRE ATTACK",
-        "The Art of Mac Malware, Volume 2::Part II: System Monitoring",
-        "The Art of Mac Malware, Volume 2::Part II: System Monitoring > 6. Log Monitoring > The Unified Logging Subsystem",
-        "ea evasion engineering 0426::PART II > CON T ROL IM PL A N T S > payload variations to analyze and develop detection",
-        "ea evasion engineering 0426::PART I > E VA S ION S T R AT EG IE S > SOC Patterns",
-        "Practical Purple Teaming::Part II: Attack Emulation and Detection Lab > Chapter 7: Network Traffic, Event Tracing, and Memory Scanning > Sigma",
-        "Practical Purple Teaming::Part II: Attack Emulation and Detection Lab > Chapter 6: Collecting Telemetry"
+        "Web Application Security::Security Automation > Vulnerability Regression Testing",
+        "Web Application Security::Security Automation > Dynamic Analysis",
+        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > Trap dispatching > Timer processing",
+        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > Processor execution model > Task state segments",
+        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > Five Stages of Intermittent Failures",
+        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Testing",
+        "Cybersecurity Ops with bash::Preface > Script Robustness",
+        "Cybersecurity Ops with bash::8. Real-Time Log Monitoring > Workshop",
+        "ea evasion engineering 0426::PART I > DE S IG N A N D DE V E L OPM E N T > Reliability and Exception Handling",
+        "ea evasion engineering 0426::PART II > W I T HO U T L OL BIN S > Identifying Running Processes, Services, and Scheduled Tasks",
+        "malware analysis detection engineering comprehensive::Part VI: Detection Engineering > Chapter 25: Binary Instrumentation for Reversing Automation > Tool Writing Using DBI > Cons",
+        "malware analysis detection engineering comprehensive::Part VI: Detection Engineering > Chapter 25: Binary Instrumentation for Reversing Automation > DBI: Terminologies and Internals",
+        "Linux System Programming::Chapter 6. Advanced Process Management > Real-Time Systems > Determinism",
+        "Linux System Programming::Chapter 6. Advanced Process Management > Real-Time Systems > Latency, Jitter, and Deadlines",
+        "Mastering Malware Analysis::Chapter 9: Scripts and Macros: Reversing, Deobfuscation, and Debugging",
+        "Mastering Malware Analysis::Chapter 9: Scripts and Macros: Reversing, Deobfuscation, and Debugging > Other script languages > Where to start from"
       ]
     }
   }
