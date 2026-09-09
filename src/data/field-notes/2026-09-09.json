@@ -1,252 +1,234 @@
 {
-  "topic": "Windows and Linux internals",
-  "desk": "Field Notes — Daily Technical Edition",
-  "title": "Record the Boundary Before the Alert",
-  "standfirst": "Windows and Linux expose different state boundaries. A detector needs to record transitions, validation, delivery, and uncertainty before it interprets an alert or response as evidence.",
+  "topic": "Field Notes — Daily Technical Edition — 2026-09-09 — Revision 2 — Forensics",
+  "desk": "Forensics",
+  "title": "Reconstruct Evidence Across Process Boundaries",
+  "standfirst": "Forensic confidence depends on preserving volatile state, separating evidence from interpretation, bounding automation, and validating every alert against known system transitions before drawing conclusions during incident response.",
   "readTime": "12 min",
   "thesis": [
-    "An operating-system event is not the state itself. It is a representation emitted at a boundary: a syscall, a scheduler handoff, a debugger queue, an ABI conversion, or a volatile-data collection point. The packet’s Windows and Linux excerpts show why the distinction matters. Validation can reject an input; scheduling can save one execution context and select another; conversion can change representation; collection can lag behind mutation. A security pipeline should therefore preserve event provenance, ordering, validity, and acknowledgement. That design improves replay and review. It does not recover fields that the boundary never exposed.",
-    "The research studies constrain, but do not prove, the human analogy. Recent experiments found that people changed belief updates with context, source reliability, uncertainty, and task structure. A CBT trial changed procrastination outcomes but did not isolate durable mechanisms. A neuroimaging study linked uncertainty and peer confidence to social information use and medial prefrontal activity. These findings justify engineering questions about evidence weighting and feedback, not claims about operators’ minds. The safe systems parallel is narrower: make source reliability, confidence, task context, and model limits explicit in the data path."
+    "Most forensic errors begin before analysis. A responder sees an alert, but the relevant state may already have changed, been rolled back, or become unobservable. The packet’s Linux, Windows, container, and SRE excerpts support a disciplined sequence: capture state, record provenance, model transitions, then test hypotheses against independent observations. This sequence does not produce certainty by itself. It makes uncertainty inspectable. A missing memory image, incomplete logical extraction, failed checkpoint, or untested alert route must remain an explicit state rather than silently becoming a negative finding.",
+    "Evidence quality is a systems property, not a property of one tool. Memory acquisition, kernel event capture, state-repository transactions, scoped credentials, and monitoring tests expose different slices of behavior. Each slice has blind spots and failure modes. This edition therefore treats forensic confidence as a derived judgment with inputs: coverage, ordering, integrity, and reproducibility. Automation can reduce exposure and recovery time, but restart thresholds, retry counts, and cancellation paths require measured bounds. Validation must exercise both nominal and degraded states, including return to nominal load."
   ],
   "reports": [
     {
-      "title": "Classify Boundary Events",
-      "body": "Windows and Linux internals give the edition its first constraint: treat privilege changes as typed transitions. In malware analysis detection engineering comprehensive, a syscall lets user space request controlled access while the kernel validates parameters and drivers mediate hardware interaction. Linux Kernel Development (3rd Edition) separates user-space from kernel-space, including different memory and hardware authority. Evasive Malware shows a Windows call chain from VirtualAlloc through VirtualAllocEx and NtAllocateVirtualMemory into ntoskrnl.exe. A useful event record therefore names caller layer, interface, parameters observed, validation result, and resulting object. High-level API names alone cannot explain rejected inputs, wrappers, or lower-level effects.",
+      "title": "Acquire State Before Interpreting Events",
+      "body": "Start with an evidence boundary. The malware-analysis excerpt defines memory forensics as acquisition followed by analysis and notes that a dump can reconstruct events after live tooling is no longer available. Learning Linux Binary Analysis adds that process inspection depends on registers, the stack, dynamic linking, and ELF state; its monitor can inspect live memory or snapshots. Learn Kubernetes Security gives an operational analogue: CRIU, or Checkpoint and Restore In Userspace, freezes a running container, persists its state, and restores it in a sandbox. The common requirement is acquisition before interpretation.",
       "sources": [
         {
           "book": "malware analysis detection engineering comprehensive",
-          "page": 187,
-          "note": "Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Syscall"
+          "page": 457,
+          "note": "Chapter: Part IV: Malware Analysis and Classification; topic: Chapter 14: Memory Forensics with Volatility; subtopic: Memory Acquisition; headingPath: Part IV: Malware Analysis and"
         },
         {
-          "book": "Linux Kernel Development (3rd Edition)",
-          "page": 32,
-          "note": "1 Introduction to the Linux Kernel > Overview of Operating Systems and Kernels"
+          "book": "Learning Linux Binary Analysis",
+          "page": 97,
+          "note": "Chapter: Chapter 3: Linux Process Tracing; topic: ptrace and forensic analysis; subtopic: ptrace and forensic analysis; headingPath: Chapter 3: Linux Process Tracing > ptrace and"
         },
+        {
+          "book": "Learn Kubernetes Security",
+          "page": 261,
+          "note": "Chapter: Chapter 11: Defense in Depth; topic: Conducting forensics with Sysdig Inspect and CRIU; subtopic: Using CRIU to collect data; headingPath: Chapter 11: Defense in Depth >"
+        }
+      ]
+    },
+    {
+      "title": "Separate Observations From Hypotheses",
+      "body": "Once evidence exists, reconstruct transitions rather than listing isolated artifacts. The Windows excerpt describes application staging, user-data restoration, transactional State Repository updates, and notifications only after commit. That order supplies a sequence for analysis. Hiding Behind the Keyboard shows why coverage matters: logical mobile extraction found two entries, while physical searching recovered additional content. Google SRE describes troubleshooting as iterative hypothesis testing against telemetry, logs, expected behavior, and known failure modes. A forensic conclusion should therefore identify the observed transition, the missing transitions, and the test that could disconfirm the explanation.",
+      "sources": [
+        {
+          "book": "Windows Internals, Part 2, 7th Edition",
+          "page": 297,
+          "note": "Chapter: Chapter 8 System mechanisms; topic: Conclusion; subtopic: Conclusion; headingPath: Chapter 8 System mechanisms > Conclusion"
+        },
+        {
+          "book": "Hiding Behind the Keyboard",
+          "page": 56,
+          "note": "Chapter: 3 - Triaging Mobile Evidence; topic: EXAMPLES OF LOGICAL AND PHYSICAL DATA; subtopic: EXAMPLES OF LOGICAL AND PHYSICAL DATA; headingPath: 3 - Triaging Mobile Evidence > EX"
+        },
+        {
+          "book": "google site reliability engineering",
+          "page": 104,
+          "note": "Chapter: Chapter 12 - Effective Troubleshooting; topic: Theory; subtopic: Theory; headingPath: Chapter 12 - Effective Troubleshooting > Theory"
+        }
+      ]
+    },
+    {
+      "title": "Bound Automation and Failure Scope",
+      "body": "Containment and automation alter the evidence they are meant to preserve. Evasive Malware describes anti-forensics as removing or hiding traces, and notes that bare-metal analysis loses convenient clean snapshots. The Book of Batch Scripting shows why an auto-kill threshold must distinguish a hang from a slow valid run, and why retry counts should reflect clustered failures rather than independent-failure arithmetic. Google SRE recommends impulse and gradual load tests, separate component testing, and recovery testing. Building Secure and Reliable Systems adds distinct failure domains and scoped credentials. Automation must preserve provenance while limiting impact.",
+      "sources": [
         {
           "book": "Evasive Malware",
-          "page": 38,
-          "note": "Part I: The Fundamentals > 1. Windows Foundational Concepts"
+          "page": 337,
+          "note": "Chapter: Part IV: Defense Evasion; topic: 15. Fileless, Living Off the Land, and Anti-Forensics Techniques; subtopic: 15. Fileless, Living Off the Land, and Anti-Forensics Techni"
+        },
+        {
+          "book": "The Book of Batch Scripting",
+          "page": 410,
+          "note": "Chapter: Part III: Advanced Topics; topic: 26. Automatic Restarts and Multithreading; subtopic: The Design Considerations; headingPath: Part III: Advanced Topics > 26. Automatic R"
+        },
+        {
+          "book": "google site reliability engineering",
+          "page": 197,
+          "note": "Chapter: Chapter 22 - Addressing Cascading Failures; topic: Testing for Cascading Failures; subtopic: Test Noncritical Backends; headingPath: Chapter 22 - Addressing Cascading Fail"
         }
       ]
     },
     {
-      "title": "Model Process and Thread State",
-      "body": "Process evidence needs a state model rather than a flat timeline. How Linux Works, 3rd Edition (Early Access 2021) describes context switching as interrupt, state capture, I/O work, runnable-process selection, preparation, time-slice assignment, and return to user mode. Linux System Programming distinguishes shared process address space from thread-local stack, processor state, and instruction location. Keep process_state and thread_state separate. Add predecessor, successor, event_id, sequence, and collection_time. A late event should enter pending evidence, not overwrite a newer state. A duplicate should be recorded and ignored by the reducer. This supports deterministic replay and prevents thread activity from being misattributed to the process.",
+      "title": "Validate Recovery and Alert Paths",
+      "body": "End with repeatable validation. The Site Reliability Workbook separates monitoring tests into metric behavior, rule evaluation, and alert routing, then recommends a running system with known metrics when synthetic coverage is incomplete. Building Secure and Reliable Systems recommends safe cancellation of injected behaviors and mirrored requests for readiness checks. Windows Internals shows that transactional state changes can trigger registered listeners only after commit. These ideas produce a concrete acceptance test: inject a benign synthetic transition, capture its evidence, verify the derived metric, confirm the alert route, and inspect the recovered state. A passing alert is not proof of complete visibility.",
       "sources": [
         {
-          "book": "How Linux Works, 3rd Edition (Early Access 2021)",
-          "page": 29,
-          "note": "About the Author > Chapter 1: The Big Picture > 1.1 Levels and Layers of Abstraction in a Linux System > 1.3 The Kernel > 1.3.1 Process Management"
+          "book": "The Site Reliability Workbook",
+          "page": 105,
+          "note": "Chapter: Part I. Foundations; topic: Chapter 4. Monitoring; subtopic: Conclusion; headingPath: Part I. Foundations > Chapter 4. Monitoring > Conclusion"
         },
         {
-          "book": "Linux System Programming",
-          "page": 43,
-          "note": "Chapter 1. Introduction and Essential Concepts > Concepts of Linux Programming > Processes"
+          "book": "Building Secure and Reliable Systems",
+          "page": 212,
+          "note": "Chapter: Part II. Designing Systems; topic: Chapter 8. Design for Resilience; subtopic: Validation in Practice; headingPath: Part II. Designing Systems > Chapter 8. Design for Res"
         },
-        {
-          "book": "Blue Team Handbook Incident Response",
-          "page": 185,
-          "note": "Chapter 6. Linux Volatile Data System Investigation > Preparation"
-        }
-      ]
-    },
-    {
-      "title": "Track Queue and Snapshot Time",
-      "body": "Collection is a producer-consumer problem with explicit pauses. Windows Internals, Part 2, 7th Edition describes a debug-associated process entering deep freeze, accumulating debug events, and resuming only after ContinueDebugEvent. The consumer’s acknowledgement is part of the state transition. Blue Team Handbook Incident Response warns that Linux memory, processes, and network ports change frequently and may require repeated collection; its Windows chapter frames investigation as ordered acquisition of system state. Record queue position, delivery status, acknowledgement time, snapshot time, and stale_after. An empty consumer result means only that no event was visible there. It does not prove the producer emitted nothing.",
-      "sources": [
         {
           "book": "Windows Internals, Part 2, 7th Edition",
-          "page": 271,
-          "note": "Chapter 8 System mechanisms > User-mode debugging > Native support"
-        },
-        {
-          "book": "Blue Team Handbook Incident Response",
-          "page": 185,
-          "note": "Chapter 6. Linux Volatile Data System Investigation > Preparation"
-        },
-        {
-          "book": "Blue Team Handbook Incident Response",
-          "page": 143,
-          "note": "Chapter 5. Windows Volatile Data Investigation > Chapter 5. Windows Volatile Data Investigation"
-        }
-      ]
-    },
-    {
-      "title": "Test Translation and Recovery",
-      "body": "Boundary tests should target translation, isolation, and recovery. Windows Internals, Part 2, 7th Edition describes WoW64 thunking as conversion of parameters and outputs between 32-bit and 64-bit execution before the native syscall returns. Linux Kernel Development (3rd Edition) describes message passing across address spaces as a failure-isolation mechanism with latency and throughput costs. Mastering Malware Analysis recommends resettable analysis environments and tracing tools for observing behavior. Build synthetic fixtures that cross a schema boundary, delay a message, drop a field, and replay the sequence. Compare preserved fields, rejected transitions, queue lag, and final uncertainty. These tests expose local defects; they do not prove complete observability.",
-      "sources": [
-        {
-          "book": "Windows Internals, Part 2, 7th Edition",
-          "page": 143,
-          "note": "Chapter 8 System mechanisms > WoW64 (Windows-on-Windows) > X86 simulation on AMD64 platforms"
-        },
-        {
-          "book": "Linux Kernel Development (3rd Edition)",
-          "page": 34,
-          "note": "1 Introduction to the Linux Kernel > Linux Versus Classic Unix Kernels"
-        },
-        {
-          "book": "Mastering Malware Analysis",
-          "page": 420,
-          "note": "Chapter 10: Dissecting Linux and IoT Malware > Static and dynamic analysis of x86 (32- and 64-bit) samples > Dynamic analysis > Debuggers"
+          "page": 297,
+          "note": "Chapter: Chapter 8 System mechanisms; topic: Conclusion; subtopic: Conclusion; headingPath: Chapter 8 System mechanisms > Conclusion"
         }
       ]
     }
   ],
   "technical": {
-    "title": "Evidence Ledger and Transition Reducer",
-    "intro": "Use a small event ledger to preserve boundary crossings, process state, consumer acknowledgement, and uncertainty. The code below reads synthetic JSONL from standard input and writes a deterministic summary; it does not touch hosts, processes, files, or network services.",
+    "title": "Forensic State Machines and Testable Evidence",
+    "intro": "A forensic workflow is a state machine: a finite set of evidence states with explicitly allowed transitions. The design below separates capture, reconstruction, automation, and validation so each boundary can be tested independently.",
     "modules": [
       {
-        "label": "A",
-        "title": "Event Record",
-        "explanation": "Use an append-only ledger with one record per observation. A state field stores the reducer’s current conclusion; it is not a raw fact. Keep raw observation, source, observed_at, received_at, sequence, predecessor, confidence, and acknowledgement separate. The reducer can then distinguish an absent event from a late event, a rejected transition from a conflicting value, and a low-confidence observation from a missing field. Hash payloads when raw content cannot be retained. Never derive a host action from a record marked synthetic or unverified. The ledger is useful only if its schema preserves the boundary at which each event was produced.",
+        "label": "01",
+        "title": "Represent Acquisition and Preservation States",
+        "explanation": "An evidence record should distinguish live observation, captured state, restored state, and analyzed state. Memory acquisition produces a dump before analysis begins. CRIU can freeze a container and restore the saved state, but the packet notes experimental status and version-specific failure. That makes checkpoint success an assertion to verify, not an assumption. A record should include time, source, integrity value, acquisition method, and expected next state. Missing fields should produce an incomplete record. They should not be coerced into a clean result. The state boundary limits claims about what the investigator could actually observe.",
         "mechanics": [
-          "Separate observation from inference.",
-          "Reject duplicate event identifiers.",
-          "Flag sequence gaps and stale timestamps.",
-          "Store source and acknowledgement metadata."
+          "Assign every artifact an acquisition state and source identifier.",
+          "Record integrity and ordering metadata before analysis begins.",
+          "Reject transitions that skip capture or preservation evidence."
         ],
-        "code": "{\"event_id\":\"e-001\",\"observed_at\":\"2026-09-09T09:00:00Z\",\"source\":\"synthetic\",\"entity\":\"proc-7\",\"prior_state\":\"created\",\"next_state\":\"running\",\"sequence\":1,\"confidence\":0.95,\"acknowledged\":true}",
-        "caption": "A benign event record for a synthetic process timeline.",
+        "code": "events = [\n    {\"id\": \"e1\", \"state\": \"running\", \"source\": \"synthetic-proc\"},\n    {\"id\": \"e2\", \"state\": \"checkpointed\", \"source\": \"synthetic-criu\"},\n    {\"id\": \"e3\", \"state\": \"terminated\", \"source\": \"synthetic-control\"},\n    {\"id\": \"e4\", \"state\": \"restored\", \"source\": \"synthetic-sandbox\"},\n    {\"id\": \"e5\", \"state\": \"analyzed\", \"source\": \"synthetic-review\"},\n]\nallowed = {\n    (\"running\", \"checkpointed\"),\n    (\"checkpointed\", \"terminated\"),\n    (\"terminated\", \"restored\"),\n    (\"restored\", \"analyzed\"),\n}\nfor before, after in zip(events, events[1:]):\n    edge = (before[\"state\"], after[\"state\"])\n    if edge not in allowed:\n        print(\"invalid transition\", edge)\nprint(\"observed states:\", [event[\"state\"] for event in events])",
+        "caption": "Read-only validation of a synthetic evidence-transition sequence.",
         "sources": [
           {
             "book": "malware analysis detection engineering comprehensive",
-            "page": 187,
-            "note": "Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Syscall"
+            "page": 457,
+            "note": "Chapter: Part IV: Malware Analysis and Classification; topic: Chapter 14: Memory Forensics with Volatility; subtopic: Memory Acquisition; headingPath: Part IV: Malware Analysis and"
           },
           {
-            "book": "How Linux Works, 3rd Edition (Early Access 2021)",
-            "page": 29,
-            "note": "About the Author > Chapter 1: The Big Picture > 1.1 Levels and Layers of Abstraction in a Linux System > 1.3 The Kernel > 1.3.1 Process Management"
-          },
-          {
-            "book": "Linux System Programming",
-            "page": 43,
-            "note": "Chapter 1. Introduction and Essential Concepts > Concepts of Linux Programming > Processes"
+            "book": "Learn Kubernetes Security",
+            "page": 261,
+            "note": "Chapter: Chapter 11: Defense in Depth; topic: Conducting forensics with Sysdig Inspect and CRIU; subtopic: Using CRIU to collect data; headingPath: Chapter 11: Defense in Depth >"
           }
         ]
       },
       {
-        "label": "B",
-        "title": "Reducer and State Transitions",
-        "explanation": "Implement legal transitions as data. For a synthetic process, allow created to running, running to blocked or exited, and blocked to running or exited. Each input produces a result tuple: applied, duplicate, invalid, conflict, or pending. Keep current_state and pending_events in separate maps keyed by entity_id. When sequence numbers skip, record a gap without inventing an intermediate state. When a late event arrives, compare its predecessor with the stored state and emit a reconciliation record. This structure makes failures testable and supports replay. It also keeps unknown distinct from false, which matters when sensors miss a queue or volatile snapshot.",
+        "label": "02",
+        "title": "Model Observations, Hypotheses, and Disconfirmation",
+        "explanation": "A hypothesis is a proposed cause that predicts an observable state or transition. Google SRE describes troubleshooting as iterative comparison between telemetry, logs, system design, expected behavior, and failure modes. The investigator should store observations separately from interpretations, then attach a test to each proposed cause. For example, a process-memory anomaly may support several explanations: injection, corrupted state, or incomplete acquisition. A single matching artifact does not resolve them. Use independent evidence, controlled treatment, or replay in a sandbox. Record which prediction passed, which failed, and which remains untested.",
         "mechanics": [
-          "Keep current state and pending events separate.",
-          "Record invalid transitions without applying them.",
-          "Represent conflicts as data.",
-          "Do not collapse unknown into false."
+          "Store raw observations separately from analyst conclusions.",
+          "Attach one confirming and one disconfirming test to each hypothesis.",
+          "Mark untested explanations as unresolved rather than false."
         ],
-        "code": "legal = {'created': ['running'], 'running': ['blocked', 'exited'], 'blocked': ['running', 'exited']}\nresult = reduce_event(event, current_state, legal)",
-        "caption": "A read-only reducer over synthetic events.",
+        "code": "observations = [\n    {\"signal\": \"memory_region_changed\", \"observed\": True},\n    {\"signal\": \"network_connection_seen\", \"observed\": False},\n]\nhypotheses = {\n    \"injection\": {\"requires\": [\"memory_region_changed\"]},\n    \"remote_control\": {\"requires\": [\"network_connection_seen\"]},\n}\nfor name, hypothesis in hypotheses.items():\n    result = all(item[\"observed\"] for item in observations\n                 if item[\"signal\"] in hypothesis[\"requires\"])\n    print(name, \"supported\" if result else \"not supported by captured evidence\")",
+        "caption": "Synthetic hypothesis checks that preserve missing evidence as a limitation.",
         "sources": [
           {
-            "book": "How Linux Works, 3rd Edition (Early Access 2021)",
-            "page": 29,
-            "note": "About the Author > Chapter 1: The Big Picture > 1.1 Levels and Layers of Abstraction in a Linux System > 1.3 The Kernel > 1.3.1 Process Management"
+            "book": "google site reliability engineering",
+            "page": 104,
+            "note": "Chapter: Chapter 12 - Effective Troubleshooting; topic: Theory; subtopic: Theory; headingPath: Chapter 12 - Effective Troubleshooting > Theory"
           },
           {
-            "book": "Windows Internals, Part 2, 7th Edition",
-            "page": 271,
-            "note": "Chapter 8 System mechanisms > User-mode debugging > Native support"
-          },
-          {
-            "book": "Blue Team Handbook Incident Response",
-            "page": 185,
-            "note": "Chapter 6. Linux Volatile Data System Investigation > Preparation"
+            "book": "Learning Linux Binary Analysis",
+            "page": 97,
+            "note": "Chapter: Chapter 3: Linux Process Tracing; topic: ptrace and forensic analysis; subtopic: ptrace and forensic analysis; headingPath: Chapter 3: Linux Process Tracing > ptrace and"
           }
         ]
       },
       {
-        "label": "C",
-        "title": "Delivery and Observation State",
-        "explanation": "Model delivery as a second state machine. A producer event can be emitted, queued, delivered, acknowledged, expired, or dropped. The consumer should expose queue depth, oldest_event_age, acknowledgement lag, and drop reason. A debugger pause and a volatile forensic snapshot are different mechanisms, but both create temporal uncertainty between system state and analyst view. Use two timestamps: observed_at for the source and collected_at for acquisition. If the source cannot provide observed_at, set it to null and lower evidence completeness. Do not backfill current time as if it were observation time. The output should show what the pipeline knows and which interval remains unobserved.",
+        "label": "03",
+        "title": "Bound Timeouts, Retries, and Containment",
+        "explanation": "An automated response changes system state and can destroy the next observation opportunity. The Batch Scripting excerpt recommends measuring normal duration, maximum valid duration, polling interval, and retry count before killing a suspected hang. It also warns that failures may cluster, so independent probability can understate risk. Google SRE adds separate component breaking points and recovery behavior after overload. A safe controller therefore needs a timeout budget, bounded retries, a cancellation path, and a terminal state for manual review. It should emit every decision, including no-op decisions caused by incomplete telemetry.",
         "mechanics": [
-          "Track producer and consumer states separately.",
-          "Record observed and collected timestamps.",
-          "Expose queue lag and drop reasons.",
-          "Mark unavailable timestamps as unknown."
+          "Set thresholds from measured synthetic workloads and valid slow cases.",
+          "Bound retries and stop when failures cluster or evidence becomes incomplete.",
+          "Log every timeout, cancellation, retry, and terminal review state."
         ],
-        "code": "delivery = ['emitted', 'queued', 'delivered', 'acknowledged', 'expired', 'dropped']",
-        "caption": "Delivery states for synthetic telemetry.",
+        "code": "samples = [12, 18, 35, 58]\nvalid_max = 35\npoll_interval = 10\nfor elapsed in samples:\n    action = \"complete\" if elapsed <= valid_max else \"manual-review\"\n    checks = (elapsed + poll_interval - 1) // poll_interval\n    print({\"elapsed\": elapsed, \"checks\": checks, \"action\": action})",
+        "caption": "Synthetic timeout classification with no process execution or system changes.",
         "sources": [
           {
-            "book": "Windows Internals, Part 2, 7th Edition",
-            "page": 271,
-            "note": "Chapter 8 System mechanisms > User-mode debugging > Native support"
+            "book": "The Book of Batch Scripting",
+            "page": 411,
+            "note": "Chapter: Part III: Advanced Topics; topic: 26. Automatic Restarts and Multithreading; subtopic: The Core Auto-Kill-and-Restart Logic; headingPath: Part III: Advanced Topics > 26. A"
           },
           {
-            "book": "Blue Team Handbook Incident Response",
-            "page": 185,
-            "note": "Chapter 6. Linux Volatile Data System Investigation > Preparation"
-          },
-          {
-            "book": "Blue Team Handbook Incident Response",
-            "page": 143,
-            "note": "Chapter 5. Windows Volatile Data Investigation > Chapter 5. Windows Volatile Data Investigation"
+            "book": "google site reliability engineering",
+            "page": 197,
+            "note": "Chapter: Chapter 22 - Addressing Cascading Failures; topic: Testing for Cascading Failures; subtopic: Test Noncritical Backends; headingPath: Chapter 22 - Addressing Cascading Fail"
           }
         ]
       }
     ]
   },
   "correlation": {
-    "title": "Correlation: Evidence Across Boundaries",
-    "question": "How can an investigation preserve state when evidence crosses privilege, architecture, process, and observation boundaries?",
+    "title": "Bounded Analogy: Confidence Is Not Evidence",
+    "question": "How can evidence systems separate captured state from confidence in the explanation?",
     "stages": [
       {
-        "label": "1",
-        "title": "Capture",
-        "body": "A syscall, scheduler handoff, debugger event, or volatile-data command exposes a transition only through a particular interface. Store the interface and its scope with the event. This limits interpretation to the fields the source actually exposed.",
-        "invariant": "The record names what the sensor could observe and what it could not.",
+        "label": "01",
+        "title": "Measure the Observable Surface",
+        "body": "The behavioural study tested rule-following with eight undergraduates using competing reinforcement schedules. Participants followed the richer instructed alternative when discriminative stimuli were present, but preference became unsystematic without them. Bounded analogy: an alert rule may guide interpretation when context exists, while the same event without provenance should not receive the same confidence.",
+        "invariant": "Context-dependent behaviour does not establish complete system visibility.",
+        "source": {
+          "book": "The Site Reliability Workbook",
+          "page": 105,
+          "note": "Chapter: Part I. Foundations; topic: Chapter 4. Monitoring; subtopic: Conclusion; headingPath: Part I. Foundations > Chapter 4. Monitoring > Conclusion"
+        }
+      },
+      {
+        "label": "02",
+        "title": "Preserve the Capture Boundary",
+        "body": "The neuropsychology study designed a brief battery against a longer reference battery and validated it in two stroke cohorts. Bounded analogy: a short telemetry view can screen for likely impairment but cannot stand for the full state. Its sensitivity and specificity must be reported with the reference process and population.",
+        "invariant": "A compact signal is useful only against a declared reference and scope.",
         "source": {
           "book": "malware analysis detection engineering comprehensive",
-          "page": 187,
-          "note": "Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Syscall"
+          "page": 457,
+          "note": "Chapter: Part IV: Malware Analysis and Classification; topic: Chapter 14: Memory Forensics with Volatility; subtopic: Memory Acquisition; headingPath: Part IV: Malware Analysis and"
         }
       },
       {
-        "label": "2",
-        "title": "Translate",
-        "body": "API layers, WoW64 thunking, and message passing can change representation and timing. Compare source and target schemas before treating equal-looking fields as equal facts. Preserve the original form, conversion result, and any unsupported field as separate evidence.",
-        "invariant": "Conversion is an explicit step with a checked contract.",
+        "label": "03",
+        "title": "Account for Missing Channels",
+        "body": "The CBT trial compared therapist-supported internet rumination-focused CBT with a waitlist in 118 adults and measured outcomes at seven weeks and six months. Bounded analogy: improvement against a weak baseline does not identify every causal mechanism. A forensic control should compare against active alternatives when attribution matters.",
+        "invariant": "A measured change is not a complete causal explanation.",
         "source": {
-          "book": "Windows Internals, Part 2, 7th Edition",
-          "page": 143,
-          "note": "Chapter 8 System mechanisms > WoW64 (Windows-on-Windows) > X86 simulation on AMD64 platforms"
+          "book": "Hiding Behind the Keyboard",
+          "page": 56,
+          "note": "Chapter: 3 - Triaging Mobile Evidence; topic: EXAMPLES OF LOGICAL AND PHYSICAL DATA; subtopic: EXAMPLES OF LOGICAL AND PHYSICAL DATA; headingPath: 3 - Triaging Mobile Evidence > EX"
         }
       },
       {
-        "label": "3",
-        "title": "Queue",
-        "body": "A consumer can pause while producers continue. Debug-event acknowledgement and repeated volatile collection both imply that time and delivery status belong in the evidence model. Record queue position, observation time, collection time, and acknowledgement state before making a negative claim.",
-        "invariant": "An empty view does not prove an empty history.",
+        "label": "04",
+        "title": "Test Threshold Effects",
+        "body": "The cognitive-science study manipulated prior beliefs during EEG measurement and found that confidence changed while accuracy and reaction time did not materially change. Bounded analogy: a detector’s confidence score can move because of priors or calibration while raw event evidence stays fixed. Store both layers and test them separately.",
+        "invariant": "Derived confidence can change without a corresponding change in captured evidence.",
         "source": {
-          "book": "Windows Internals, Part 2, 7th Edition",
-          "page": 271,
-          "note": "Chapter 8 System mechanisms > User-mode debugging > Native support"
+          "book": "google site reliability engineering",
+          "page": 104,
+          "note": "Chapter: Chapter 12 - Effective Troubleshooting; topic: Theory; subtopic: Theory; headingPath: Chapter 12 - Effective Troubleshooting > Theory"
         }
       },
       {
-        "label": "4",
-        "title": "Reconcile",
-        "body": "The reducer applies legal transitions, preserves conflicts, and marks gaps. It should distinguish current state from pending evidence so late records cannot silently rewrite history. A rejected transition remains useful as evidence about the model, even when it cannot change the current state.",
-        "invariant": "Unknown, invalid, and contradictory are different outcomes.",
+        "label": "05",
+        "title": "Validate the Recovery Path",
+        "body": "The research findings do not justify clinical or operational advice. They support a narrow testing principle: separate inputs, derived judgments, and outcomes. In systems work, mirror benign requests, inject reversible states, and verify the return path. The comparison is methodological, not biological, and should not be generalized beyond controlled validation.",
+        "invariant": "A bounded analogy must preserve its domain limits and test conditions.",
         "source": {
-          "book": "Linux System Programming",
-          "page": 43,
-          "note": "Chapter 1. Introduction and Essential Concepts > Concepts of Linux Programming > Processes"
-        }
-      },
-      {
-        "label": "5",
-        "title": "Test",
-        "body": "Use deterministic synthetic events to replay normal, delayed, duplicate, and malformed paths. Compare expected state, audit results, queue lag, and uncertainty fields across repeated runs. A passing replay demonstrates reducer consistency; it does not demonstrate complete sensor coverage.",
-        "invariant": "The same fixture produces the same report.",
-        "source": {
-          "book": "Mastering Malware Analysis",
-          "page": 420,
-          "note": "Chapter 10: Dissecting Linux and IoT Malware > Static and dynamic analysis of x86 (32- and 64-bit) samples > Dynamic analysis > Debuggers"
+          "book": "Building Secure and Reliable Systems",
+          "page": 212,
+          "note": "Chapter: Part II. Designing Systems; topic: Chapter 8. Design for Resilience; subtopic: Validation in Practice; headingPath: Part II. Designing Systems > Chapter 8. Design for Res"
         }
       }
     ]
@@ -254,200 +236,201 @@
   "research": [
     {
       "field": "behavioural psychology",
-      "published": "2025-06-30",
-      "title": "Effects of experiencing the COVID-19 pandemic on optimistically biased belief updating",
-      "journal": "eLife",
-      "url": "https://elifesciences.org/articles/101157",
-      "question": "How does a major shared context change optimistic belief updating when people receive base-rate evidence?",
-      "method": "The authors compared 123 French participants across four testing periods before, during, and after COVID-19, using a 40-trial adverse-event base-rate task and RL-like versus Bayesian model fits with mixed-effects analyses and a within-cohort retest subset.",
-      "finding": "Outside the pandemic, updating showed optimism and fit an RL-like model; during it, optimism faded, negative estimates strengthened, and Bayesian fits improved, with more confidence in base rates during crisis testing.",
-      "caveat": "The pandemic was not experimentally assigned, groups were small, one retest lost two participants, and the authors note that causal psychological drivers remain unclear between groups.",
-      "systemsLink": "Use context as a recorded feature when comparing detector decisions; do not infer operator traits or causality from alert outcomes."
+      "published": "2024 May 28",
+      "title": "Toward a Procedure to Study Rule-Governed Choice: Preliminary Data",
+      "journal": "Analysis of Verbal Behavior",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40124232/",
+      "question": "How do explicit rules and reinforcement rates jointly affect human choice under conflicting discriminative stimuli?",
+      "method": "Two experiments used concurrent variable-interval and extinction schedules; Experiment 1 tested eight undergraduates given incompatible rules, while Experiment 2 used the same choice procedure without rules.",
+      "finding": "With both stimuli present, participants favored the alternative linked to the richer reinforcement rate and prior instruction; without stimuli, preference was indifferent or unsystematic.",
+      "caveat": "The preliminary procedure used small undergraduate samples and produced two alternative explanations, limiting generalization beyond this controlled laboratory choice task.",
+      "systemsLink": "Contextual alert rules may guide action, but missing context should lower confidence rather than create an assumed state."
     },
     {
       "field": "CBT",
-      "published": "2025-08-20",
-      "title": "Group cognitive behavioral therapy for reducing procrastination in college students: a randomized controlled trial",
-      "journal": "Cognitive Behaviour Therapy",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40832803/",
-      "question": "Does a structured CBT intervention change procrastination and which measured components move with the outcome?",
-      "method": "A randomized controlled trial assigned 71 university students with self-reported procrastination issues to an online CBT intervention or wait-list control and measured procrastination, Temporal Motivation Theory factors, self-efficacy, and well-being after treatment using standardized questionnaires.",
-      "finding": "The intervention reduced procrastination with Cohen’s d = 1.09, improved Value, Impulsivity, and self-efficacy, but not Expectancy or overall well-being. The authors interpret this as mostly behavioural strategy change, not established cognitive restructuring.",
-      "caveat": "The sample was small, used a wait-list comparator, relied on self-report, and did not isolate active components or establish long-term academic and psychological effects beyond the study.",
-      "systemsLink": "Translate the bounded analogy into explicit review loops: measure behaviour, change one control, retest, and avoid treating improvement as mechanism proof."
+      "published": "2025 Jul",
+      "title": "An Internet-Delivered Rumination-Focused CBT Intervention for Adults With Depression and Anxiety: A Randomized Controlled Trial.",
+      "journal": "Behavior Therapy",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40541378/",
+      "question": "Does therapist-supported internet rumination-focused CBT reduce repetitive negative thinking, anxiety, and depression relative to a waitlist?",
+      "method": "A single-blind, two-arm randomized trial assigned 118 Romanian adults with elevated worry or rumination and anxiety or depression to seven weeks of internet CBT or delayed treatment, with six-month follow-up in the CBT arm.",
+      "finding": "Compared with waitlist, CBT reduced perseverative thinking, brooding, worry, anxiety, and depression at seven weeks, with effects maintained at six months in the treated arm.",
+      "caveat": "The waitlist was not an active comparator, participants had elevated transdiagnostic symptoms, and six-month maintenance lacked a concurrent randomized control group.",
+      "systemsLink": "A detected change should be compared with active baselines when attribution matters; improvement alone does not identify its mechanism."
     },
     {
       "field": "neuropsychology",
-      "published": "2025-09-09",
-      "title": "Neural correlates of Bayesian social belief updating in the medial prefrontal cortex",
-      "journal": "Cerebral Cortex",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/40924468/",
-      "question": "When do uncertainty and peer confidence alter information use, and what neural signals accompany the update?",
-      "method": "Two experiments used a mushroom-estimation task: an online behavioral sample and an fMRI sample, with own certainty and peer confidence manipulated, Bayesian models fitted, and medial prefrontal activity analyzed after exclusions and quality checks in separate analyses for both tasks.",
-      "finding": "Experiment 1 analyzed 101 participants and experiment 2 analyzed 68 behaviorally, with 58 usable fMRI datasets; social-information use rose when own certainty was lower and peer confidence higher under the task model.",
-      "caveat": "The samples were screened and heavily reduced by exclusions, the task used estimates about mushrooms, and fMRI associations cannot establish a unique neural mechanism in operations.",
-      "systemsLink": "Use source confidence and local uncertainty as separate fields; this supports weighting rules, but it does not justify claims about analysts’ neural states or attention."
+      "published": "2025 Sep",
+      "title": "StrokeCog-15 Is an Efficient Neuropsychological Battery to Screen for Cognitive Impairment in Chronic Stroke",
+      "journal": "Stroke",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40406877/",
+      "question": "Can a fifteen-minute, four-test battery detect chronic poststroke cognitive impairment against a comprehensive neuropsychological reference battery?",
+      "method": "Researchers derived StrokeCog-15 from a 60-minute, nine-test battery in 126 chronic ischemic stroke participants, then evaluated it against 61 participants from an external prospective cohort using sensitivity and specificity.",
+      "finding": "The brief battery achieved sensitivity 0.97 and specificity 0.78 in derivation, then 0.93 and 0.67 externally, outperforming the Montreal Cognitive Assessment on sensitivity.",
+      "caveat": "Both cohorts involved chronic ischemic stroke, impairment was defined by the reference battery, and observational validation does not establish causality or broad transportability.",
+      "systemsLink": "A compact telemetry view can screen states efficiently, but its coverage and error rates require an explicit reference population."
     },
     {
       "field": "cognitive science",
-      "published": "2025-02-21",
-      "title": "Belief updating in the face of misinformation: The role of source reliability",
-      "journal": "Cognition",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/39986181/",
-      "question": "How does source reliability change belief revision after contradictory, retracted, or competing information from different sources?",
-      "method": "Four experiments tested belief revision after retractions and competing allegations, varying source reliability while measuring prior beliefs, updated judgments, and how participants rated trustworthiness and expertise across opposing-source conditions and correction sequences in controlled tasks.",
-      "finding": "Participants discounted retracted information, reverted toward prior beliefs, used reliable sources more strongly, and penalized corrected sources; trustworthiness and expertise both informed reliability judgments in the reported experiments, across source conflicts.",
-      "caveat": "The evidence comes from controlled experiments and the abstract does not establish field performance, durable updating, or transfer to adversarial operational telemetry with unknown base rates.",
-      "systemsLink": "Attach reliability metadata to detections and corrections, then test whether the reducer revises evidence without deleting provenance or treating consensus as truth."
+      "published": "2025 Aug 1",
+      "title": "Common neural choice signals reflect accumulated evidence, not confidence",
+      "journal": "Cerebral Cortex",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40924467/",
+      "question": "Do confidence-related EEG signals encode confidence directly or accumulated evidence used to compute confidence?",
+      "method": "A within-subject EEG experiment with 32 Dutch-speaking participants manipulated prior beliefs, measured accuracy, reaction time, confidence, CPP, Pe, alpha and beta activity, and applied neural decoding analyses.",
+      "finding": "Prior beliefs changed confidence without changing accuracy or materially changing reaction time; CPP and Pe tracked accumulated evidence, while a frontal signal reflected both beliefs and confidence.",
+      "caveat": "The modest single-sample perceptual task, lack of performance feedback, and indirect EEG measures constrain generalization from neural correlates to operational confidence and incident decisions.",
+      "systemsLink": "Treat alert confidence as derived, not raw evidence; test completeness, priors, and analyst calibration under controlled perturbations."
     }
   ],
   "synthesis": {
-    "title": "Operational Synthesis",
-    "body": "The packet’s operating-system examples and the four studies support one bounded design rule: record how evidence changes state, not only the final alert. Syscalls, scheduling, debugger queues, ABI conversion, and volatile collection each expose different parts of system history. The studies suggest that context, reliability, confidence, and task structure can affect updating, but their samples and controlled designs do not validate claims about security operators. Apply the analogy to data structures and tests: store provenance, uncertainty, delivery state, and model outcomes; replay missing, delayed, duplicate, and conflicting evidence; and preserve the limit between observed state and inferred cause.",
+    "title": "Evidence Requires State, Scope, and Repetition",
+    "body": "The packet supports a forensic workflow that begins with acquisition and ends with tested recovery. Linux memory analysis and container checkpoints make volatile state available for later inspection. Windows transactions show why ordering and commit boundaries matter. Mobile triage shows that logical coverage can miss recoverable content. SRE troubleshooting and monitoring tests make hypotheses and alert routes testable. Automation adds risk when thresholds, retries, or cancellation paths are unmeasured. The research comparisons support only bounded methodological parallels: separate observations from derived confidence, declare coverage, and preserve the conditions under which a conclusion was produced.",
     "principles": [
-      "Record transitions, not only outcomes.",
-      "Separate observations from interpretations.",
-      "Keep uncertainty explicit.",
-      "Track delivery and acknowledgement state."
+      "Capture before interpretation.",
+      "Record state transitions explicitly.",
+      "Treat missing evidence as a result.",
+      "Bound automated intervention and retries."
     ]
   },
   "lab": {
-    "title": "Synthetic Evidence State Lab",
-    "duration": "45 minutes",
-    "difficulty": "advanced",
+    "title": "Synthetic Evidence Transition Review",
+    "duration": "75 minutes",
+    "difficulty": "Advanced",
     "topics": [
-      "boundary validation",
-      "process and thread state",
-      "producer-consumer delivery",
-      "confidence metadata",
-      "deterministic replay"
+      "State-machine modeling",
+      "Volatile evidence acquisition",
+      "Hypothesis testing",
+      "Failure-aware automation",
+      "Synthetic monitoring validation"
     ],
-    "scenario": "Build a read-only reducer for synthetic Windows and Linux-style events that records boundary metadata, process and thread state, delivery status, confidence, conflicts, and replay outcomes.",
-    "deliverable": "A synthetic JSONL fixture set, transition table, reducer output, replay diff, and one-page observability review.",
+    "scenario": "Review a benign synthetic incident in which a process alert precedes a checkpoint, a telemetry gap, a bounded timeout, and a restored sandbox state.",
+    "deliverable": "Submit a transition table, evidence ledger, hypothesis matrix, timeout analysis, and alert-validation record for peer review.",
     "phases": [
       {
-        "title": "Define the state model",
-        "objective": "Specify entities, legal transitions, and uncertainty values.",
+        "title": "Define the Evidence State Model",
+        "objective": "Create explicit states and allowed transitions for the synthetic incident.",
         "actions": [
-          "Define process and thread records.",
-          "List legal and invalid transitions.",
-          "Separate unknown from false."
+          "Define running, checkpointed, terminated, restored, and analyzed states.",
+          "Assign required fields for time, source, integrity, and confidence.",
+          "Mark prohibited transitions such as analysis before acquisition."
         ],
-        "evidence": "A transition table and predicate tests."
+        "evidence": "A state diagram and transition table with required and missing fields."
       },
       {
-        "title": "Create synthetic evidence",
-        "objective": "Generate benign events that cross schema and delivery boundaries.",
+        "title": "Generate and Acquire Synthetic Evidence",
+        "objective": "Produce a reproducible event stream without touching host or network state.",
         "actions": [
-          "Create syscall-like validation events.",
-          "Add one delayed and one duplicate event.",
-          "Add one missing predecessor and one conflicting value."
+          "Generate in-memory process and container events with fixed timestamps.",
+          "Add one deliberate telemetry gap and one delayed event.",
+          "Calculate a digest over the synthetic event sequence."
         ],
-        "evidence": "A deterministic JSONL fixture set with expected results."
+        "evidence": "The event fixture, digest, gap record, and acquisition metadata."
       },
       {
-        "title": "Run the reducer",
-        "objective": "Apply events without touching a host or external service.",
+        "title": "Test Competing Hypotheses",
+        "objective": "Separate captured observations from explanations and disconfirming checks.",
         "actions": [
-          "Process events in normal order.",
-          "Record queue and acknowledgement states.",
-          "Preserve rejected and pending records."
+          "Define injection, remote-control, and benign-corruption hypotheses.",
+          "Map each hypothesis to required observations and absent observations.",
+          "Run read-only checks against the synthetic ledger."
         ],
-        "evidence": "Reducer output with state, audit, and uncertainty fields."
+        "evidence": "A hypothesis matrix showing supported, unsupported, and unresolved claims."
       },
       {
-        "title": "Replay failure paths",
-        "objective": "Compare normal, delayed, duplicate, and malformed sequences.",
+        "title": "Evaluate Timeout and Recovery Logic",
+        "objective": "Test bounded automation against valid slow runs and clustered failures.",
         "actions": [
-          "Replay each fixture twice.",
-          "Compare final states and audit records.",
-          "Measure synthetic queue lag."
+          "Use synthetic durations below and above the valid maximum.",
+          "Apply a fixed polling interval and bounded retry count.",
+          "Record completion, manual-review, cancellation, and retry states."
         ],
-        "evidence": "A replay report showing deterministic output and distinct failure labels."
+        "evidence": "A decision log demonstrating no automatic action on incomplete evidence."
       },
       {
-        "title": "Review observability limits",
-        "objective": "Document what the reducer cannot infer from its inputs.",
+        "title": "Validate Metrics and Alert Routing",
+        "objective": "Verify that known synthetic transitions produce the intended derived signals.",
         "actions": [
-          "List fields absent from each fixture.",
-          "Separate source facts from reducer inferences.",
-          "State one claim the data cannot test."
+          "Expose synthetic request, error, and transition counts.",
+          "Evaluate rules against normal, degraded, and recovered sequences.",
+          "Confirm labels route alerts to the expected review destination."
         ],
-        "evidence": "A short review note with residual uncertainty."
+        "evidence": "Metric snapshots, rule results, routing records, and a recovery comparison."
       }
     ],
     "success": [
-      "All inputs are synthetic or read-only.",
-      "Every transition has a predicate test.",
-      "Duplicate and delayed events remain visible.",
-      "Replay output is deterministic.",
-      "Unknown fields are not converted to false."
+      "Every analyzed record has a preceding acquisition record.",
+      "The telemetry gap remains visible in the final ledger.",
+      "Timeout logic distinguishes valid slow runs from hangs.",
+      "Alerts fire only for tested synthetic conditions.",
+      "A reviewer can reproduce the final state from submitted evidence."
     ],
     "questions": [
-      "Which missing field changes the decision most?",
-      "Which transition remains unobservable?",
-      "What would falsify the correlation?"
+      "Which conclusion depends on the missing event?",
+      "Which transition has no independent observation?",
+      "What evidence would disconfirm the leading hypothesis?",
+      "Where could automation destroy the next observation opportunity?"
     ],
     "sources": [
       {
-        "book": "malware analysis detection engineering comprehensive",
-        "page": 187,
-        "note": "Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Syscall"
+        "book": "Learn Kubernetes Security",
+        "page": 261,
+        "note": "Chapter: Chapter 11: Defense in Depth; topic: Conducting forensics with Sysdig Inspect and CRIU; subtopic: Using CRIU to collect data; headingPath: Chapter 11: Defense in Depth >"
       },
       {
-        "book": "How Linux Works, 3rd Edition (Early Access 2021)",
-        "page": 29,
-        "note": "About the Author > Chapter 1: The Big Picture > 1.1 Levels and Layers of Abstraction in a Linux System > 1.3 The Kernel > 1.3.1 Process Management"
+        "book": "google site reliability engineering",
+        "page": 104,
+        "note": "Chapter: Chapter 12 - Effective Troubleshooting; topic: Theory; subtopic: Theory; headingPath: Chapter 12 - Effective Troubleshooting > Theory"
       },
       {
-        "book": "Windows Internals, Part 2, 7th Edition",
-        "page": 271,
-        "note": "Chapter 8 System mechanisms > User-mode debugging > Native support"
+        "book": "The Book of Batch Scripting",
+        "page": 411,
+        "note": "Chapter: Part III: Advanced Topics; topic: 26. Automatic Restarts and Multithreading; subtopic: The Core Auto-Kill-and-Restart Logic; headingPath: Part III: Advanced Topics > 26. A"
       },
       {
-        "book": "Windows Internals, Part 2, 7th Edition",
-        "page": 143,
-        "note": "Chapter 8 System mechanisms > WoW64 (Windows-on-Windows) > X86 simulation on AMD64 platforms"
+        "book": "The Site Reliability Workbook",
+        "page": 105,
+        "note": "Chapter: Part I. Foundations; topic: Chapter 4. Monitoring; subtopic: Conclusion; headingPath: Part I. Foundations > Chapter 4. Monitoring > Conclusion"
       },
       {
-        "book": "Mastering Malware Analysis",
-        "page": 420,
-        "note": "Chapter 10: Dissecting Linux and IoT Malware > Static and dynamic analysis of x86 (32- and 64-bit) samples > Dynamic analysis > Debuggers"
+        "book": "Building Secure and Reliable Systems",
+        "page": 212,
+        "note": "Chapter: Part II. Designing Systems; topic: Chapter 8. Design for Resilience; subtopic: Validation in Practice; headingPath: Part II. Designing Systems > Chapter 8. Design for Res"
       }
     ]
   },
   "meta": {
     "date": "2026-09-09",
-    "revision": 1,
-    "signature": "0cbdffea66b9e90f4ff1",
-    "generatedAt": "2026-09-09T14:31:46.476Z",
+    "revision": 2,
+    "signature": "488b36034a30aad71e64",
+    "generatedAt": "2026-09-09T16:51:32.680Z",
     "generator": "Codex CLI",
     "model": "gpt-5.6-luna",
     "reasoning": "high",
     "retrieval": {
-      "focus": "Windows and Linux internals",
+      "focus": "Forensics",
       "method": "SQLite FTS5 + BGE small embeddings",
       "sections": [
-        "malware analysis detection engineering comprehensive::Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Mutants/Mutex",
-        "malware analysis detection engineering comprehensive::Part II: OS and System Fundamentals > Chapter 5: Windows Internals > Syscall",
-        "How Linux Works, 3rd Edition (Early Access 2021)::About the Author > Chapter 14: A Brief Survey of the Linux Desktop and Printing > 14.1 Desktop Components > 14.1.1 Framebuffers > 14.1.2 The X Window System",
-        "How Linux Works, 3rd Edition (Early Access 2021)::About the Author > Chapter 1: The Big Picture > 1.1 Levels and Layers of Abstraction in a Linux System > 1.3 The Kernel > 1.3.1 Process Management",
-        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > User-mode debugging > Native support",
-        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > WoW64 (Windows-on-Windows) > X86 simulation on AMD64 platforms",
-        "Evasive Malware::Part I: The Fundamentals > 1. Windows Foundational Concepts",
-        "Evasive Malware::Part II: Context Awareness and Sandbox Evasion > 4. Enumerating Operating System Artifacts",
-        "Linux Kernel Development (3rd Edition)::1 Introduction to the Linux Kernel > Linux Versus Classic Unix Kernels",
-        "Linux Kernel Development (3rd Edition)::1 Introduction to the Linux Kernel > Overview of Operating Systems and Kernels",
-        "Blue Team Handbook Incident Response::Chapter 6. Linux Volatile Data System Investigation > Preparation",
-        "Blue Team Handbook Incident Response::Chapter 5. Windows Volatile Data Investigation",
         "google site reliability engineering::Chapter 22 - Addressing Cascading Failures > Testing for Cascading Failures > Test Noncritical Backends",
         "google site reliability engineering::Chapter 12 - Effective Troubleshooting > Theory",
-        "Linux System Programming::Chapter 1. Introduction and Essential Concepts > Concepts of Linux Programming > Processes",
-        "Linux System Programming::Appendix B. Bibliography > Books on Operating System Design",
-        "Windows internals part1::Chapter 1 Concepts and tools > Digging into Windows internals > Kernel debugging",
-        "Windows internals part1::Chapter 1 Concepts and tools > Windows operating system versions",
-        "Mastering Malware Analysis::Chapter 10: Dissecting Linux and IoT Malware > Static and dynamic analysis of x86 (32- and 64-bit) samples > Dynamic analysis > Debuggers",
-        "Mastering Malware Analysis::Chapter 6: Understanding Kernel-Mode Rootkits > Windows internals > The infrastructure of Windows"
+        "The Site Reliability Workbook::Part I. Foundations > Chapter 7. Simplicity > Measuring Complexity",
+        "The Site Reliability Workbook::Part I. Foundations > Chapter 4. Monitoring > Conclusion",
+        "Learn Kubernetes Security::Chapter 11: Defense in Depth > Conducting forensics with Sysdig Inspect and CRIU > Using CRIU to collect data",
+        "Learn Kubernetes Security::Chapter 11: Defense in Depth > Conducting forensics with Sysdig Inspect and CRIU > Using Sysdig and Sysdig Inspect",
+        "Building Secure and Reliable Systems::Part I. Introductory Material > Chapter 1. The Intersection of Security and Reliability > Reliability and Security: Commonalities > From Design to Production",
+        "Building Secure and Reliable Systems::Part II. Designing Systems > Chapter 8. Design for Resilience > Continuous Validation > Validation in Practice",
+        "Learning Linux Binary Analysis::Chapter 7: Process Memory Forensics > Summary",
+        "Learning Linux Binary Analysis::Chapter 3: Linux Process Tracing > ptrace and forensic analysis",
+        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms > Conclusion",
+        "Windows Internals, Part 2, 7th Edition::Chapter 8 System mechanisms",
+        "Evasive Malware::Part IV: Defense Evasion > 15. Fileless, Living Off the Land, and Anti-Forensics Techniques",
+        "Evasive Malware::Part IV: Defense Evasion > A. Building an Anti-Evasion Analysis Lab",
+        "malware analysis detection engineering comprehensive::Part IV: Malware Analysis and Classification > Chapter 14: Memory Forensics with Volatility > Memory Acquisition",
+        "malware analysis detection engineering comprehensive::Part IV: Malware Analysis and Classification > Chapter 14: Memory Forensics with Volatility > Why Another Technique?",
+        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Core Auto-Kill-and-Restart Logic",
+        "The Book of Batch Scripting::Part III: Advanced Topics > 26. Automatic Restarts and Multithreading > The Automatic Kill and Restart > The Design Considerations",
+        "Hiding Behind the Keyboard::2 - The Tor Browser > FORENSIC ANALYSIS OF THE ONION ROUTER > From Your Perspective",
+        "Hiding Behind the Keyboard::3 - Triaging Mobile Evidence > EXAMPLES OF LOGICAL AND PHYSICAL DATA"
       ]
     }
   }
