@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import edition from '../data/current-edition.json';
+import { normalizeReadTime } from '../lib/field-notes';
 
 const logs = (await getCollection('logs', ({ data }) => data.status === 'published'))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
@@ -10,6 +11,7 @@ const recent = logs.filter((log) => log.id !== lead?.id).slice(0, 4);
 const base = import.meta.env.BASE_URL;
 const editionDate = new Date(`${edition.meta.date}T00:00:00Z`);
 const dateLabel = editionDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const editionReadTime = normalizeReadTime(edition.readTime);
 ---
 <BaseLayout path="/" title="Telemetry Lab — Security Research & Field Notes">
   <section class="journal-lead">
@@ -29,7 +31,7 @@ const dateLabel = editionDate.toLocaleDateString('en-GB', { day: '2-digit', mont
       <h2 id="today-edition">{edition.title}</h2>
       <p>{edition.standfirst}</p>
       <ol>{edition.synthesis.principles.slice(0,3).map((principle) => <li>{principle}</li>)}</ol>
-      <a href={`${base}field-notes/`}>READ TODAY'S {edition.readTime.toUpperCase()} EDITION <span aria-hidden="true">→</span></a>
+      <a href={`${base}field-notes/`}>READ TODAY'S {editionReadTime.toUpperCase()} EDITION <span aria-hidden="true">→</span></a>
     </aside>
   </section>
 

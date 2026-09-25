@@ -3,9 +3,22 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const source = path.resolve(projectRoot, '..', 'web', 'app', 'globals.css');
+const source = process.env.FIELD_NOTES_STYLE_SOURCE
+  ? path.resolve(projectRoot, process.env.FIELD_NOTES_STYLE_SOURCE)
+  : path.resolve(projectRoot, '..', 'web', 'app', 'globals.css');
 const destination = path.join(projectRoot, 'src', 'styles', 'field-notes-reference.css');
-const css = await readFile(source, 'utf8');
+let css;
+try {
+  css = await readFile(source, 'utf8');
+} catch (error) {
+  if (error.code === 'ENOENT') {
+    throw new Error(
+      `Field Notes stylesheet not found: ${source}\n` +
+      'Set FIELD_NOTES_STYLE_SOURCE to the source globals.css file.',
+    );
+  }
+  throw error;
+}
 const start = css.indexOf('body {');
 
 if (start === -1) throw new Error('Could not find the Field Notes body styles');

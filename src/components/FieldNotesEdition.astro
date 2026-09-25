@@ -1,11 +1,12 @@
 ---
-import type { FieldNotesEdition } from '../lib/field-notes';
+import { normalizeReadTime, type FieldNotesEdition } from '../lib/field-notes';
 
 interface Props { edition: FieldNotesEdition }
 const { edition } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const editionDate = new Date(`${edition.meta.date}T00:00:00Z`);
 const displayDate = editionDate.toLocaleDateString('en-IN', { weekday:'long', day:'2-digit', month:'long', year:'numeric', timeZone:'UTC' });
+const readTime = normalizeReadTime(edition.readTime);
 const allSources = [
   ...edition.reports.flatMap((report) => report.sources),
   ...edition.technical.modules.flatMap((module) => module.sources),
@@ -28,12 +29,12 @@ const roman = ['I','II','III','IV'];
   <div class="topic-picker"><label>Today’s subject</label><strong>{edition.desk}</strong></div>
   <a href={`${base}field-notes/archive/`}>Archive & search →</a>
 </nav>
-<div class="generation-wire shell state-ready"><b>PUBLISHED DESK</b><span>{edition.topic}</span><small>{edition.readTime} read · revision {edition.meta.revision}</small></div>
+<div class="generation-wire shell state-ready"><b>PUBLISHED DESK</b><span>{edition.topic}</span><small>{readTime} read · revision {edition.meta.revision}</small></div>
 <div class="interest-wire shell"><b>READER’S WIRE</b><span>Complex systems</span><span>Detection engineering</span><span>Windows + Linux internals</span><span>Behavioural psychology</span><span>CBT</span><span>Neuropsychology</span><span>Human mind</span></div>
 
 <section class="lead shell">
   <article class="lead-story">
-    <div class="eyebrow"><span>{edition.desk}</span><span>{edition.readTime} edition</span></div>
+    <div class="eyebrow"><span>{edition.desk}</span><span>{readTime} edition</span></div>
     <h2>{edition.title}</h2>
     <p class="standfirst">{edition.standfirst}</p>
     <div class="byline">AN ANALYSIS ACROSS {citedBooks} RELEVANT VOLUMES</div>

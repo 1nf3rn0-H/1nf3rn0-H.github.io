@@ -2,6 +2,8 @@ import currentEdition from '../data/current-edition.json';
 
 export type FieldNotesEdition = typeof currentEdition;
 
+export const normalizeReadTime = (readTime: string) => readTime.replace(/\s+read$/i, '').trim();
+
 const editionModules = import.meta.glob<FieldNotesEdition>('../data/field-notes/*.json', {
   eager: true,
   import: 'default',
@@ -15,7 +17,7 @@ export const fieldNotesIndex = fieldNotesEditions.map((edition) => ({
   title: edition.title,
   desk: edition.desk,
   standfirst: edition.standfirst,
-  readTime: edition.readTime,
+  readTime: normalizeReadTime(edition.readTime),
   topics: edition.lab.topics,
   searchText: [
     edition.title,

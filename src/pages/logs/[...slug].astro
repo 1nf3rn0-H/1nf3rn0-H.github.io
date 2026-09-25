@@ -1,8 +1,38 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-export async function getStaticPaths(){const logs=await getCollection('logs',({data})=>data.status==='published');return logs.map((log)=>({params:{slug:log.id},props:{log}}));}
-const { log } = Astro.props; const { Content, headings } = await render(log); const data = log.data;
-const fields=[['PUBLISHED',data.publishedAt.toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'2-digit'}).toUpperCase()],['TYPE',data.type],['CATEGORY',data.category],['DIFFICULTY',data.difficulty],['TOOLS',data.tools?.join(' · ')],['MITRE',data.mitre?.join(' · ')]] as const;
+
+export async function getStaticPaths() {
+  const logs = await getCollection('logs', ({ data }) => data.status === 'published');
+  return logs.map((log) => ({ params: { slug: log.id }, props: { log } }));
+}
+
+const { log } = Astro.props;
+const { Content, headings } = await render(log);
+const data = log.data;
+const articleHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const fields = [
+  ['PUBLISHED', data.publishedAt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).toUpperCase()],
+  ['TYPE', data.type],
+  ['CATEGORY', data.category],
+  ['DIFFICULTY', data.difficulty],
+  ['TOOLS', data.tools?.join(' · ')],
+  ['MITRE', data.mitre?.join(' · ')],
+] as const;
 ---
-<BaseLayout path={`/logs/${log.id}/`} title={`${data.title} — Telemetry Lab`} description={data.description}><div class="article-shell"><article class="article"><header class="article-header"><p class="article-kicker">RESEARCH LOG · {data.type.toUpperCase()} · {data.category.replaceAll('-', ' ').toUpperCase()}</p><h1>{data.title}</h1><p class="article-summary">{data.description}</p><div class="article-meta">{fields.filter(([,value])=>value).map(([label,value])=><div>{label}<strong>{String(value).toUpperCase()}</strong></div>)}</div></header>{headings.length>0&&<details class="mobile-contents"><summary>IN THIS ARTICLE · {headings.filter((heading)=>heading.depth===2||heading.depth===3).length} SECTIONS</summary><nav>{headings.filter((heading)=>heading.depth===2||heading.depth===3).map((heading)=><a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></details>}<div class="prose"><Content /></div></article>{headings.length>0&&<aside class="article-aside" aria-label="Table of contents"><p>IN THIS ARTICLE</p>{headings.filter((heading)=>heading.depth===2||heading.depth===3).map((heading)=><a href={`#${heading.slug}`}>{heading.text}</a>)}</aside>}</div></BaseLayout>
+<BaseLayout path={`/logs/${log.id}/`} title={`${data.title} — Telemetry Lab`} description={data.description}>
+  <div class="article-shell">
+    <article class="article">
+      <header class="article-header">
+        <p class="article-kicker">RESEARCH LOG · {data.type.toUpperCase()} · {data.category.replaceAll('-', ' ').toUpperCase()}</p>
+        <h1>{data.title}</h1>
+        <p class="article-summary">{data.description}</p>
+        <div class="article-meta">{fields.filter(([, value]) => value).map(([label, value]) => <div>{label}<strong>{String(value).toUpperCase()}</strong></div>)}</div>
+        {data.repository && <a class="article-repository" href={data.repository} target="_blank" rel="noopener noreferrer">VIEW PROJECT REPOSITORY <span aria-hidden="true">↗</span></a>}
+      </header>
+      {articleHeadings.length > 0 && <details class="mobile-contents"><summary>IN THIS ARTICLE · {articleHeadings.length} SECTIONS</summary><nav>{articleHeadings.map((heading) => <a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></details>}
+      <div class="prose"><Content /></div>
+    </article>
+    {articleHeadings.length > 0 && <aside class="article-aside" aria-label="Table of contents"><p>IN THIS ARTICLE</p>{articleHeadings.map((heading) => <a href={`#${heading.slug}`}>{heading.text}</a>)}</aside>}
+  </div>
+</BaseLayout>
